@@ -15,14 +15,12 @@ public class FileErrorInfo extends ErrorInfo {
      * 
      * @param filename
      *            of the file unable to process
-     * @param errorCode
-     *            of the error
-     * @param message
-     *            describing the error
+     * @param errorInfo
+     *            containing the error infos
      */
-    public FileErrorInfo(final String filename, final int errorCode, final String message) {
+    public FileErrorInfo(final String filename, final ErrorInfo errorInfo) {
 
-        super(errorCode, message);
+        super(errorInfo.errorCode, errorInfo.message);
         this.filename = filename;
     }
 

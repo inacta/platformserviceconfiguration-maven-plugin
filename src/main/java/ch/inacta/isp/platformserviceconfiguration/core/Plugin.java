@@ -1,5 +1,8 @@
 package ch.inacta.isp.platformserviceconfiguration.core;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
@@ -10,8 +13,11 @@ import java.util.Map;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
@@ -30,6 +36,7 @@ public class Plugin extends AbstractMojo {
 
     private static final String REALM_PLACEHOLDER = "%4T";
     private static final String DEFAULT_METHOD = "POST";
+    private static final MediaType DEFAULT_REQUEST_TYPE = APPLICATION_JSON_TYPE;
 
     @Parameter(property = "app")
     private String app;
@@ -39,9 +46,6 @@ public class Plugin extends AbstractMojo {
 
     @Parameter(property = "fileSets")
     private final List<FileSet> fileSets = new ArrayList<>();
-
-    @Parameter(property = "formParams")
-    private Map<String, String> formParams;
 
     @Parameter(property = "resource")
     private String resource;
@@ -58,15 +62,14 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "method")
     private String method;
 
+    @Parameter(property = "requestType")
+    private MediaType requestType;
+
     @Override
     public void execute() throws MojoExecutionException {
 
         final List<ErrorInfo> errorInfos = new ArrayList<>();
         final List<File> files = getFilesToProcess();
-
-        if (!files.isEmpty() && !getFormParams().isEmpty()) {
-            throw new MojoExecutionException("It is not possible to declare simultaneously form parameters and file sets!");
-        }
 
         final AuthorizationStrategy authorizationStrategy = getStrategy();
 
@@ -74,15 +77,48 @@ public class Plugin extends AbstractMojo {
             final Invocation.Builder builder = createBuilder(authorizationStrategy, resourcePath);
 
             if (!files.isEmpty()) {
-                // TODO executeWithFiles should return errorFiles
+                errorInfos.addAll(executeRequestWithFiles(builder, files));
             } else {
-                // TODO executeWithoutFiles should return errorFiles
+                errorInfos.addAll(executeRequestWithoutFiles(builder));
             }
         }
 
         if (!errorInfos.isEmpty()) {
             throw new MojoExecutionException(String.format("Unable to process files: %n%s", wrap(" ", "%n", errorInfos)));
         }
+    }
+
+    private List<ErrorInfo> executeRequestWithoutFiles(final Invocation.Builder builder) {
+
+        return new ArrayList<>(Arrays.asList(processResponse(builder.method(getMethod()))));
+    }
+
+    private List<ErrorInfo> executeRequestWithFiles(final Invocation.Builder builder, final List<File> files) {
+
+        final List<ErrorInfo> errorInfos = new ArrayList<>();
+
+        for (final File file : files) {
+            getLog().debug(String.format("Submitting file [%s]", file.toString()));
+            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.entity(file, getRequestType())));
+            if (result == null) {
+                errorInfos.add(new FileErrorInfo(file.getPath(), result));
+            }
+        }
+
+        return errorInfos;
+    }
+
+    private ErrorInfo processResponse(final Response response) {
+
+        if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
+            getLog().debug(String.format("Status: [%d]", response.getStatus()));
+        } else {
+            getLog().warn(String.format("Error code: [%d]", response.getStatus()));
+            getLog().debug(response.getEntity().toString());
+            return new ErrorInfo(response.getStatus(), response.getEntity().toString());
+        }
+
+        return null;
     }
 
     private Invocation.Builder createBuilder(final AuthorizationStrategy authorizationStrategy, final String resource) throws MojoExecutionException {
@@ -214,20 +250,6 @@ public class Plugin extends AbstractMojo {
     }
 
     /**
-     * Gets the defined form params.
-     * 
-     * @return a map containing the form params
-     */
-    public Map<String, String> getFormParams() {
-
-        if (this.formParams == null) {
-            return new HashMap<>();
-        }
-
-        return this.formParams;
-    }
-
-    /**
      * Gets the defined resource.
      * 
      * @return the resource path
@@ -297,5 +319,19 @@ public class Plugin extends AbstractMojo {
         }
 
         return this.method;
+    }
+
+    /**
+     * Gets the defined request type.
+     * 
+     * @return the request type
+     */
+    public MediaType getRequestType() {
+
+        if (this.requestType == null) {
+            return DEFAULT_REQUEST_TYPE;
+        }
+
+        return this.requestType;
     }
 }
