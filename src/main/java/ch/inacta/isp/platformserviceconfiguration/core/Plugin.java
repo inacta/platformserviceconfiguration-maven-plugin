@@ -285,6 +285,11 @@ public class Plugin extends AbstractMojo {
         return this.authorization;
     }
 
+    /**
+     * Gets the defined request method.
+     * 
+     * @return the request method as string
+     */
     public String getMethod() {
 
         if (this.method == null) {
