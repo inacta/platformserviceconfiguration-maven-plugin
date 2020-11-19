@@ -10,6 +10,12 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.FileUtils;
 
+/**
+ * Transformer to transform filesets.
+ *
+ * @author INACTA AG
+ * @since 1.0.0
+ */
 public class FileSetTransformer {
 
     private final Log logger;

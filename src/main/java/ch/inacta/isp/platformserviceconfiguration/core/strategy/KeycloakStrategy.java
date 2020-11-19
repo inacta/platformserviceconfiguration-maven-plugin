@@ -29,9 +29,9 @@ import ch.inacta.isp.platformserviceconfiguration.core.model.AccessTokenResponse
  */
 public class KeycloakStrategy implements AuthorizationStrategy {
 
+    private static final String AUTHORIZATION_RESOURCE = "auth/realms/master/protocol/openid-connect/token";
     private static final MediaType REQUEST_TYPE = APPLICATION_JSON_TYPE;
     private static final MediaType RESPONSE_TYPE = APPLICATION_OCTET_STREAM_TYPE;
-    private static final String AUTHORIZATION_RESOURCE = "auth/realms/master/protocol/openid-connect/token";
     private static final String GRANT_TYPE = "password";
     private static final String CLIENT_ID = "admin-cli";
 

@@ -37,12 +37,18 @@ import ch.inacta.isp.platformserviceconfiguration.core.strategy.RabbitMQStrategy
 @Mojo(name = "configure")
 public class Plugin extends AbstractMojo {
 
-    private static final String REALM_PLACEHOLDER = "%4T";
     private static final String DEFAULT_METHOD = "POST";
     private static final MediaType DEFAULT_REQUEST_TYPE = APPLICATION_JSON_TYPE;
+    private static final String REALM_PLACEHOLDER = "%4T";
 
     @Parameter(property = "app")
     private String app;
+
+    @Parameter(property = "authorization")
+    private Map<String, String> authorization;
+
+    @Parameter(property = "endpoint")
+    private URI endpoint;
 
     @Parameter(property = "fileSet")
     private FileSet fileSet;
@@ -50,23 +56,17 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "fileSets")
     private final List<FileSet> fileSets = new ArrayList<>();
 
-    @Parameter(property = "resource")
-    private String resource;
+    @Parameter(property = "method")
+    private String method;
 
     @Parameter(property = "realms")
     private String realms;
 
-    @Parameter(property = "endpoint")
-    private URI endpoint;
-
-    @Parameter(property = "authorization")
-    private Map<String, String> authorization;
-
-    @Parameter(property = "method")
-    private String method;
-
     @Parameter(property = "requestType")
     private MediaType requestType;
+
+    @Parameter(property = "resource")
+    private String resource;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -89,49 +89,6 @@ public class Plugin extends AbstractMojo {
         if (!errorInfos.isEmpty()) {
             throw new MojoExecutionException(String.format("Unable to process files: %n%s", wrap(" ", "%n", errorInfos)));
         }
-    }
-
-    private List<ErrorInfo> executeRequestWithoutFiles(final Invocation.Builder builder) throws MojoExecutionException {
-
-        final List<ErrorInfo> errorInfos = new ArrayList<>();
-
-        if (getMethod().equalsIgnoreCase("GET")) {
-            throw new MojoExecutionException("Get requests are not supported!");
-        } else {
-            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.form(new Form())));
-            if (result != null) {
-                errorInfos.add(result);
-            }
-        }
-
-        return errorInfos;
-    }
-
-    private List<ErrorInfo> executeRequestWithFiles(final Invocation.Builder builder, final List<File> files) {
-
-        final List<ErrorInfo> errorInfos = new ArrayList<>();
-
-        for (final File file : files) {
-            getLog().info(String.format("Submitting file [%s]", file.toString()));
-            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.entity(file, getRequestType())));
-            if (result != null) {
-                errorInfos.add(new FileErrorInfo(file.getPath(), result));
-            }
-        }
-
-        return errorInfos;
-    }
-
-    private ErrorInfo processResponse(final Response response) {
-
-        if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
-            getLog().info(String.format("Status: [%d]", response.getStatus()));
-        } else {
-            getLog().warn(String.format("Error code: [%d]", response.getStatus()));
-            return new ErrorInfo(response.getStatus(), response.getEntity().toString());
-        }
-
-        return null;
     }
 
     private Invocation.Builder createBuilder(final AuthorizationStrategy authorizationStrategy, final String resource) throws MojoExecutionException {
@@ -159,13 +116,54 @@ public class Plugin extends AbstractMojo {
         return builder;
     }
 
-    private void setHeaders(final Invocation.Builder builder, final AccessTokenResponse accessTokenResponse) {
+    private List<ErrorInfo> executeRequestWithFiles(final Invocation.Builder builder, final List<File> files) {
 
-        if (accessTokenResponse != null) {
-            final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(accessTokenResponse.getTokenType()).append(" ").append(accessTokenResponse.getAccessToken());
-            builder.header("Authorization", stringBuilder.toString());
+        final List<ErrorInfo> errorInfos = new ArrayList<>();
+
+        for (final File file : files) {
+            getLog().info(String.format("Submitting file [%s]", file.toString()));
+            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.entity(file, getRequestType())));
+            if (result != null) {
+                errorInfos.add(new FileErrorInfo(file.getPath(), result));
+            }
         }
+
+        return errorInfos;
+    }
+
+    private List<ErrorInfo> executeRequestWithoutFiles(final Invocation.Builder builder) throws MojoExecutionException {
+
+        final List<ErrorInfo> errorInfos = new ArrayList<>();
+
+        if (getMethod().equalsIgnoreCase("GET")) {
+            throw new MojoExecutionException("Get requests are not supported!");
+        } else {
+            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.form(new Form())));
+            if (result != null) {
+                errorInfos.add(result);
+            }
+        }
+
+        return errorInfos;
+    }
+
+    private List<File> getFilesToProcess() throws MojoExecutionException {
+
+        final List<File> files = new ArrayList<>();
+
+        if (getFileSet() != null && getFileSet().getDirectory() != null) {
+            getFileSets().add(getFileSet());
+        }
+
+        for (final FileSet fileSet : getFileSets()) {
+            if (fileSet != null) {
+                final FileSetTransformer fileSetTransformer = new FileSetTransformer(getLog(), fileSet);
+                files.addAll(fileSetTransformer.toFileList());
+                getLog().info(String.format("Files found: %s", StringUtils.join(fileSetTransformer.toFileList(), "\n")));
+            }
+        }
+
+        return files;
     }
 
     private List<String> getResourcePaths() throws MojoExecutionException {
@@ -205,23 +203,25 @@ public class Plugin extends AbstractMojo {
         return strategy;
     }
 
-    private List<File> getFilesToProcess() throws MojoExecutionException {
+    private ErrorInfo processResponse(final Response response) {
 
-        final List<File> files = new ArrayList<>();
-
-        if (getFileSet() != null && getFileSet().getDirectory() != null) {
-            getFileSets().add(getFileSet());
+        if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
+            getLog().info(String.format("Status: [%d]", response.getStatus()));
+        } else {
+            getLog().warn(String.format("Error code: [%d]", response.getStatus()));
+            return new ErrorInfo(response.getStatus(), response.getEntity().toString());
         }
 
-        for (final FileSet fileSet : getFileSets()) {
-            if (fileSet != null) {
-                final FileSetTransformer fileSetTransformer = new FileSetTransformer(getLog(), fileSet);
-                files.addAll(fileSetTransformer.toFileList());
-                getLog().info(String.format("Files found: %s", StringUtils.join(fileSetTransformer.toFileList(), "\n")));
-            }
-        }
+        return null;
+    }
 
-        return files;
+    private void setHeaders(final Invocation.Builder builder, final AccessTokenResponse accessTokenResponse) {
+
+        if (accessTokenResponse != null) {
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(accessTokenResponse.getTokenType()).append(" ").append(accessTokenResponse.getAccessToken());
+            builder.header("Authorization", stringBuilder.toString());
+        }
     }
 
     private <T> String wrap(final String prefix, final String suffix, final List<T> tokens) {
@@ -249,6 +249,35 @@ public class Plugin extends AbstractMojo {
     }
 
     /**
+     * Gets the defined authorization params.
+     *
+     * @return a map containing the authorization params
+     */
+    public Map<String, String> getAuthParams() {
+
+        if (this.authorization == null) {
+            return new HashMap<>();
+        }
+
+        return this.authorization;
+    }
+
+    /**
+     * Gets the defined endpoint.
+     *
+     * @return the endpoint as URI
+     * @throws MojoExecutionException
+     */
+    public URI getEndpoint() throws MojoExecutionException {
+
+        if (this.endpoint == null) {
+            throw new MojoExecutionException("Tag 'endpoint' has to be defined in configuration!");
+        }
+
+        return this.endpoint;
+    }
+
+    /**
      * Gets the defined file set.
      * 
      * @return a file set
@@ -269,66 +298,8 @@ public class Plugin extends AbstractMojo {
     }
 
     /**
-     * Gets the defined resource.
-     * 
-     * @return the resource path
-     * @throws MojoExecutionException
-     */
-    public String getResource() throws MojoExecutionException {
-
-        if (this.resource == null) {
-            throw new MojoExecutionException("Tag 'resource' has to be defined in configuration!");
-        }
-
-        return this.resource;
-    }
-
-    /**
-     * Gets the defined realms.
-     * 
-     * @return the realms as string
-     */
-    public String getRealms() {
-
-        if (this.realms == null) {
-            return "";
-        }
-
-        return this.realms;
-    }
-
-    /**
-     * Gets the defined endpoint.
-     * 
-     * @return the endpoint as URI
-     * @throws MojoExecutionException
-     */
-    public URI getEndpoint() throws MojoExecutionException {
-
-        if (this.endpoint == null) {
-            throw new MojoExecutionException("Tag 'endpoint' has to be defined in configuration!");
-        }
-
-        return this.endpoint;
-    }
-
-    /**
-     * Gets the defined authorization params.
-     * 
-     * @return a map containing the authorization params
-     */
-    public Map<String, String> getAuthParams() {
-
-        if (this.authorization == null) {
-            return new HashMap<>();
-        }
-
-        return this.authorization;
-    }
-
-    /**
      * Gets the defined request method.
-     * 
+     *
      * @return the request method as string
      */
     public String getMethod() {
@@ -341,8 +312,22 @@ public class Plugin extends AbstractMojo {
     }
 
     /**
+     * Gets the defined realms.
+     *
+     * @return the realms as string
+     */
+    public String getRealms() {
+
+        if (this.realms == null) {
+            return "";
+        }
+
+        return this.realms;
+    }
+
+    /**
      * Gets the defined request type.
-     * 
+     *
      * @return the request type
      */
     public MediaType getRequestType() {
@@ -352,5 +337,20 @@ public class Plugin extends AbstractMojo {
         }
 
         return this.requestType;
+    }
+
+    /**
+     * Gets the defined resource.
+     * 
+     * @return the resource path
+     * @throws MojoExecutionException
+     */
+    public String getResource() throws MojoExecutionException {
+
+        if (this.resource == null) {
+            throw new MojoExecutionException("Tag 'resource' has to be defined in configuration!");
+        }
+
+        return this.resource;
     }
 }
