@@ -34,6 +34,12 @@ import ch.inacta.isp.platformserviceconfiguration.core.strategy.AuthorizationStr
 import ch.inacta.isp.platformserviceconfiguration.core.strategy.KeycloakStrategy;
 import ch.inacta.isp.platformserviceconfiguration.core.strategy.RabbitMQStrategy;
 
+/**
+ * Platformservice configuration plugin implementation.
+ *
+ * @author Inacta AG
+ * @since 1.0.0
+ */
 @Mojo(name = "configure")
 public class Plugin extends AbstractMojo {
 

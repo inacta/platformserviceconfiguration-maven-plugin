@@ -3,7 +3,7 @@ package ch.inacta.isp.platformserviceconfiguration.core;
 /**
  * Representation of an error info
  *
- * @author INACTA AG
+ * @author Inacta AG
  * @since 1.0.0
  */
 public class ErrorInfo {

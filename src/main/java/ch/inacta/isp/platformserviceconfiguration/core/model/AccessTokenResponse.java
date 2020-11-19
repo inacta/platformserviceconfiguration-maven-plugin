@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Model of an access token response
  *
- * @author INACTA AG
+ * @author Inacta AG
  * @since 1.0.0
  */
 public class AccessTokenResponse {

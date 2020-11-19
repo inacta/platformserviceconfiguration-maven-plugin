@@ -24,7 +24,7 @@ import ch.inacta.isp.platformserviceconfiguration.core.model.AccessTokenResponse
 /**
  * Strategy to handle keycloak specific authorization.
  *
- * @author INACTA AG
+ * @author Inacta AG
  * @since 1.0.0
  */
 public class KeycloakStrategy implements AuthorizationStrategy {

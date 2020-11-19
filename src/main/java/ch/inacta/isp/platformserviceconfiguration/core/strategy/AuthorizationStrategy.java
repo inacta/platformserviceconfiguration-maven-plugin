@@ -11,7 +11,7 @@ import ch.inacta.isp.platformserviceconfiguration.core.model.AccessTokenResponse
 /**
  * Interface for authorization strategies
  *
- * @author INACTA AG
+ * @author Inacta AG
  * @since 1.0.0
  */
 public interface AuthorizationStrategy {

@@ -13,7 +13,7 @@ import org.codehaus.plexus.util.FileUtils;
 /**
  * Transformer to transform filesets.
  *
- * @author INACTA AG
+ * @author Inacta AG
  * @since 1.0.0
  */
 public class FileSetTransformer {
