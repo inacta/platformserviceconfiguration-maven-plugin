@@ -4,6 +4,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE;
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
@@ -31,7 +33,7 @@ public class KeycloakStrategy implements AuthorizationStrategy {
     private static final MediaType RESPONSE_TYPE = APPLICATION_OCTET_STREAM_TYPE;
     private static final String AUTHORIZATION_RESOURCE = "auth/realms/master/protocol/openid-connect/token";
     private static final String GRANT_TYPE = "password";
-    private static final String CLIENT_ID = "admin_cli";
+    private static final String CLIENT_ID = "admin-cli";
 
     private final Log logger;
     private WebTarget webTarget;
@@ -60,7 +62,15 @@ public class KeycloakStrategy implements AuthorizationStrategy {
         this.webTarget = this.webTarget.path(AUTHORIZATION_RESOURCE);
         final Invocation.Builder builder = this.webTarget.request(APPLICATION_FORM_URLENCODED_TYPE).accept(APPLICATION_JSON);
         final Response response = builder.method("POST", Entity.form(getFormParameters(authParams)));
-        return response.readEntity(AccessTokenResponse.class);
+
+        if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
+            return response.readEntity(AccessTokenResponse.class);
+        } else {
+            this.logger.error("Failed to authorize request!");
+            this.logger.error(String.format("Endpoint: POST %s", this.webTarget.getUri().toString()));
+            this.logger.error(String.format("Parameters: %s", StringUtils.join(authParams, ", ")));
+            throw new MojoExecutionException("Failed to authorize request!");
+        }
     }
 
     @Override
@@ -73,6 +83,12 @@ public class KeycloakStrategy implements AuthorizationStrategy {
     public MediaType getResponseType() {
 
         return RESPONSE_TYPE;
+    }
+
+    @Override
+    public String getStrategyName() {
+
+        return "KeycloakStrategy";
     }
 
     /**

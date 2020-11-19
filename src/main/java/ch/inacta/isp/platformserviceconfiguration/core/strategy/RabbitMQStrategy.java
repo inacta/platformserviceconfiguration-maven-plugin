@@ -56,4 +56,10 @@ public class RabbitMQStrategy implements AuthorizationStrategy {
 
         return RESPONSE_TYPE;
     }
+
+    @Override
+    public String getStrategyName() {
+
+        return "RabbitMQStrategy";
+    }
 }

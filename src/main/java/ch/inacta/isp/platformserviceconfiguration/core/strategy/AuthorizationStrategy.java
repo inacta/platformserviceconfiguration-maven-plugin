@@ -39,4 +39,11 @@ public interface AuthorizationStrategy {
      * @return MediaType
      */
     MediaType getResponseType();
+
+    /**
+     * Gets the name of the strategy.
+     * 
+     * @return strategy name
+     */
+    String getStrategyName();
 }

@@ -1,6 +1,7 @@
 package ch.inacta.isp.platformserviceconfiguration.core;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.WILDCARD_TYPE;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -110,9 +112,9 @@ public class Plugin extends AbstractMojo {
         final List<ErrorInfo> errorInfos = new ArrayList<>();
 
         for (final File file : files) {
-            getLog().debug(String.format("Submitting file [%s]", file.toString()));
+            getLog().info(String.format("Submitting file [%s]", file.toString()));
             final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.entity(file, getRequestType())));
-            if (result == null) {
+            if (result != null) {
                 errorInfos.add(new FileErrorInfo(file.getPath(), result));
             }
         }
@@ -123,10 +125,9 @@ public class Plugin extends AbstractMojo {
     private ErrorInfo processResponse(final Response response) {
 
         if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
-            getLog().debug(String.format("Status: [%d]", response.getStatus()));
+            getLog().info(String.format("Status: [%d]", response.getStatus()));
         } else {
             getLog().warn(String.format("Error code: [%d]", response.getStatus()));
-            getLog().debug(response.getEntity().toString());
             return new ErrorInfo(response.getStatus(), response.getEntity().toString());
         }
 
@@ -138,6 +139,8 @@ public class Plugin extends AbstractMojo {
         final Client client = ClientBuilder.newClient();
         client.register(JacksonFeature.class);
         WebTarget webTarget = client.target(getEndpoint());
+
+        getLog().info(String.format("Endpoint: [%s %s]", getMethod(), webTarget.getUri()));
 
         AccessTokenResponse accessTokenResponse = null;
         if (!getAuthParams().isEmpty()) {
@@ -152,8 +155,6 @@ public class Plugin extends AbstractMojo {
         final Invocation.Builder builder = webTarget.request(authorizationStrategy.getRequestType(), authorizationStrategy.getResponseType());
 
         setHeaders(builder, accessTokenResponse);
-
-        getLog().info(String.format("Endpoint: [%s %s]", getMethod(), webTarget.getUri()));
 
         return builder;
     }
@@ -192,11 +193,16 @@ public class Plugin extends AbstractMojo {
 
     private AuthorizationStrategy getStrategy() throws MojoExecutionException {
 
+        final AuthorizationStrategy strategy;
+
         if (getApp().equalsIgnoreCase("keycloak")) {
-            return new KeycloakStrategy(getLog());
+            strategy = new KeycloakStrategy(getLog());
         } else {
-            return new RabbitMQStrategy();
+            strategy = new RabbitMQStrategy();
         }
+
+        getLog().info(String.format("Selected authorization strategy: [%s]", strategy.getStrategyName()));
+        return strategy;
     }
 
     private List<File> getFilesToProcess() throws MojoExecutionException {
@@ -211,6 +217,7 @@ public class Plugin extends AbstractMojo {
             if (fileSet != null) {
                 final FileSetTransformer fileSetTransformer = new FileSetTransformer(getLog(), fileSet);
                 files.addAll(fileSetTransformer.toFileList());
+                getLog().info(String.format("Files found: %s", StringUtils.join(fileSetTransformer.toFileList(), "\n")));
             }
         }
 
@@ -340,7 +347,7 @@ public class Plugin extends AbstractMojo {
      */
     public MediaType getRequestType() {
 
-        if (this.requestType == null) {
+        if (WILDCARD_TYPE.equals(this.requestType)) {
             return DEFAULT_REQUEST_TYPE;
         }
 
