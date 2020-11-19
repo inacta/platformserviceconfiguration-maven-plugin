@@ -32,8 +32,10 @@
   <properties>
     <fasterxml.jackson.version>2.4.0</fasterxml.jackson.version>
 
+    <glassfish.jersey.version>2.22.1</glassfish.jersey.version>
+
+    <javax.activation>1.1.1</javax.activation>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-    <jersey.media.json.jackson.version>2.22.1</jersey.media.json.jackson.version>
 
     <maven.plugin.api.version>3.3.9</maven.plugin.api.version>
     <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
@@ -44,6 +46,11 @@
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-jaxb-annotations</artifactId>
       <version>${fasterxml.jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+      <version>${javax.activation}</version>
     </dependency>
     <dependency>
       <groupId>javax.ws.rs</groupId>
@@ -62,9 +69,14 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>${glassfish.jersey.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-json-jackson</artifactId>
-      <version>${jersey.media.json.jackson.version}</version>
+      <version>${glassfish.jersey.version}</version>
     </dependency>
   </dependencies>
 

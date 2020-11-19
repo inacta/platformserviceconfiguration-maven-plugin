@@ -16,6 +16,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -88,9 +89,20 @@ public class Plugin extends AbstractMojo {
         }
     }
 
-    private List<ErrorInfo> executeRequestWithoutFiles(final Invocation.Builder builder) {
+    private List<ErrorInfo> executeRequestWithoutFiles(final Invocation.Builder builder) throws MojoExecutionException {
 
-        return new ArrayList<>(Arrays.asList(processResponse(builder.method(getMethod()))));
+        final List<ErrorInfo> errorInfos = new ArrayList<>();
+
+        if (getMethod().equalsIgnoreCase("GET")) {
+            throw new MojoExecutionException("Get requests are not supported!");
+        } else {
+            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.form(new Form())));
+            if (result != null) {
+                errorInfos.add(result);
+            }
+        }
+
+        return errorInfos;
     }
 
     private List<ErrorInfo> executeRequestWithFiles(final Invocation.Builder builder, final List<File> files) {
@@ -191,7 +203,7 @@ public class Plugin extends AbstractMojo {
 
         final List<File> files = new ArrayList<>();
 
-        if (getFileSet() != null) {
+        if (getFileSet() != null && getFileSet().getDirectory() != null) {
             getFileSets().add(getFileSet());
         }
 
