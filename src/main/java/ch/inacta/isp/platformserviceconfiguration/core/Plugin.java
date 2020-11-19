@@ -34,7 +34,7 @@ import ch.inacta.isp.platformserviceconfiguration.core.strategy.AuthorizationStr
 import ch.inacta.isp.platformserviceconfiguration.core.strategy.KeycloakStrategy;
 import ch.inacta.isp.platformserviceconfiguration.core.strategy.RabbitMQStrategy;
 
-@Mojo(name = "rest-request")
+@Mojo(name = "configure")
 public class Plugin extends AbstractMojo {
 
     private static final String REALM_PLACEHOLDER = "%4T";
