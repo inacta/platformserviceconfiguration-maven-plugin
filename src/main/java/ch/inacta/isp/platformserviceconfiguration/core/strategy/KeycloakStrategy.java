@@ -56,8 +56,12 @@ public class KeycloakStrategy implements AuthorizationStrategy {
             throw new MojoExecutionException("No webtarget has been set!");
         }
 
-        authParams.put("grant_type", GRANT_TYPE);
-        authParams.put("client_id", CLIENT_ID);
+        if (!authParams.containsKey("grant_type")) {
+            authParams.put("grant_type", GRANT_TYPE);
+        }
+        if (!authParams.containsKey("client_id")) {
+            authParams.put("client_id", CLIENT_ID);
+        }
 
         this.webTarget = this.webTarget.path(AUTHORIZATION_RESOURCE);
         final Invocation.Builder builder = this.webTarget.request(APPLICATION_FORM_URLENCODED_TYPE).accept(APPLICATION_JSON);
