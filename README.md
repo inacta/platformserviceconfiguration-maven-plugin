@@ -1,4 +1,4 @@
-# maven-platformserviceconfiguration-plugin
+# platformserviceconfiguration-maven-plugin
 
 This plugin is meant to provide an easy way to configure services like keycloak or 
 rabbitmq via REST calls. This means it is only possible to perform PUT and POST 
@@ -13,7 +13,7 @@ requests.
 ## Getting started
 
 To use this plugin and start working with it, declare the 
-maven-platformserviceconfiguration-plugin and add a pluginManagement entry.
+platformserviceconfiguration-maven-plugin and add a pluginManagement entry.
 
     <packaging>pom</packaging>
     ....

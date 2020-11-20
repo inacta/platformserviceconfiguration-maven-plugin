@@ -24,6 +24,7 @@ public class AccessTokenResponse {
     private int notBeforePolicy;
     @JsonProperty("session_state")
     private String sessionState;
+    @JsonProperty("scope")
     private String scope;
 
     /**
