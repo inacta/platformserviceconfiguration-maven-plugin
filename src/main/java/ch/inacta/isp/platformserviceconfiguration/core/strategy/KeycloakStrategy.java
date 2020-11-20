@@ -1,21 +1,22 @@
 package ch.inacta.isp.platformserviceconfiguration.core.strategy;
 
+import static java.lang.String.format;
+import static javax.ws.rs.client.Entity.form;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+import static org.apache.commons.lang3.StringUtils.join;
 
 import java.util.Map;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
@@ -65,14 +66,14 @@ public class KeycloakStrategy implements AuthorizationStrategy {
 
         this.webTarget = this.webTarget.path(AUTHORIZATION_RESOURCE);
         final Invocation.Builder builder = this.webTarget.request(APPLICATION_FORM_URLENCODED_TYPE).accept(APPLICATION_JSON);
-        final Response response = builder.method("POST", Entity.form(getFormParameters(authParams)));
+        final Response response = builder.method("POST", form(getFormParameters(authParams)));
 
         if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
             return response.readEntity(AccessTokenResponse.class);
         } else {
             this.logger.error("Failed to authorize request!");
-            this.logger.error(String.format("Endpoint: POST %s", this.webTarget.getUri().toString()));
-            this.logger.error(String.format("Parameters: %s", StringUtils.join(authParams, ", ")));
+            this.logger.error(format("Endpoint: POST [%s]", this.webTarget.getUri()));
+            this.logger.error(format("Parameters: %s", join(authParams, ", ")));
             throw new MojoExecutionException("Failed to authorize request!");
         }
     }
@@ -111,7 +112,7 @@ public class KeycloakStrategy implements AuthorizationStrategy {
         final Form form = new Form();
         for (final Map.Entry<String, String> entry : formParams.entrySet()) {
             form.param(entry.getKey(), entry.getValue());
-            this.logger.debug(String.format("Form-param [%s:%s]", entry.getKey(), entry.getValue()));
+            this.logger.debug(format("Form-param [%s:%s]", entry.getKey(), entry.getValue()));
         }
         return form;
     }

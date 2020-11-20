@@ -11,20 +11,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class AccessTokenResponse {
 
     @JsonProperty("access_token")
-    String accessToken;
+    private String accessToken;
     @JsonProperty("expires_in")
-    int expiresIn;
+    private int expiresIn;
     @JsonProperty("refresh_expires_in")
-    int refreshExpiresIn;
+    private int refreshExpiresIn;
     @JsonProperty("refresh_token")
-    String refreshToken;
+    private String refreshToken;
     @JsonProperty("token_type")
-    String tokenType;
+    private String tokenType;
     @JsonProperty("not-before-policy")
-    int notBeforePolicy;
+    private int notBeforePolicy;
     @JsonProperty("session_state")
-    String sessionState;
-    String scope;
+    private String sessionState;
+    private String scope;
 
     /**
      * Gets the value of the accessToken property.

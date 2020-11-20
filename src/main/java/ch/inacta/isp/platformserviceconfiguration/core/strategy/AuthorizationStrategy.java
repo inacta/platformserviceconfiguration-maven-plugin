@@ -23,6 +23,7 @@ public interface AuthorizationStrategy {
      *            needed authorization parameters
      * @return AccessTokenResponse
      * @throws MojoExecutionException
+     *             if authorization fails
      */
     AccessTokenResponse authorize(Map<String, String> authParams) throws MojoExecutionException;
 

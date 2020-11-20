@@ -1,5 +1,8 @@
 package ch.inacta.isp.platformserviceconfiguration.core;
 
+import static java.lang.String.format;
+import static org.codehaus.plexus.util.FileUtils.getFiles;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,7 +11,6 @@ import java.util.List;
 import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.codehaus.plexus.util.FileUtils;
 
 /**
  * Transformer to transform filesets.
@@ -24,6 +26,8 @@ public class FileSetTransformer {
     /**
      * Default constructor
      * 
+     * @param logger
+     *            to write logs
      * @param fileSet
      *            to transform
      */
@@ -38,6 +42,7 @@ public class FileSetTransformer {
      * 
      * @return a list of files
      * @throws MojoExecutionException
+     *             if unable to get paths to filesets
      */
     public List<File> toFileList() throws MojoExecutionException {
 
@@ -46,13 +51,13 @@ public class FileSetTransformer {
                 final File directory = new File(this.fileSet.getDirectory());
                 final String includes = toString(this.fileSet.getIncludes());
                 final String excludes = toString(this.fileSet.getExcludes());
-                return FileUtils.getFiles(directory, includes, excludes);
+                return getFiles(directory, includes, excludes);
             } else {
-                this.logger.warn(String.format("Fileset [%s] directory empty", this.fileSet.toString()));
+                this.logger.warn(format("Fileset [%s] directory empty", this.fileSet.toString()));
                 return new ArrayList<>();
             }
         } catch (final IOException e) {
-            throw new MojoExecutionException(String.format("Unable to get paths to fileset [%s]", this.fileSet.toString()), e);
+            throw new MojoExecutionException(format("Unable to get paths to fileset [%s]", this.fileSet.toString()), e);
         }
     }
 
