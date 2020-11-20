@@ -3,6 +3,8 @@ package ch.inacta.isp.platformserviceconfiguration.core;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.ClientBuilder.newClient;
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.client.Entity.form;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.WILDCARD_TYPE;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
@@ -15,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
@@ -129,7 +130,7 @@ public class Plugin extends AbstractMojo {
 
         for (final File file : files) {
             getLog().info(format("Submitting file [%s]", file.toString()));
-            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.entity(file, getRequestType())));
+            final ErrorInfo result = processResponse(builder.method(getMethod(), entity(file, getRequestType())));
             if (result != null) {
                 errorInfos.add(new FileErrorInfo(file.getPath(), result));
             }
@@ -145,7 +146,7 @@ public class Plugin extends AbstractMojo {
         if (getMethod().equalsIgnoreCase("GET")) {
             throw new MojoExecutionException("Get requests are not supported!");
         } else {
-            final ErrorInfo result = processResponse(builder.method(getMethod(), Entity.form(new Form())));
+            final ErrorInfo result = processResponse(builder.method(getMethod(), form(new Form())));
             if (result != null) {
                 errorInfos.add(result);
             }
