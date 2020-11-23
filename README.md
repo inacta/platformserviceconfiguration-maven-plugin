@@ -108,8 +108,8 @@ application it is. Supported applications are *keycloak* and
     <configuration>
       <app>keycloak</app>
       <authorization>
-        <username>admin</username>
-        <password>Password_1</password>
+        <username>${username}</username>
+        <password>${password}</password>
       </authorization>
     </configuration>
 
@@ -119,11 +119,11 @@ be specified. Each parameter will be added to the request header.
     <configuration>
       <app>keycloak</app>
       <authorization>
-        <username>admin</username>
-        <password>Password_1</password>
+        <username>${username}</username>
+        <password>${password}</password>
          
         <grant_type>password</grant_type>
-        <client_id>admin-cli</client_id>   
+        <client_id>admin-cli</client_id>
       </authorization>
     </configuration>
 
