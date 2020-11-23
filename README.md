@@ -46,7 +46,7 @@ execution configurations to different *resource* extensions can still share
 the same base *endpoint* setting.
 
     <configuration>
-      <endpoint>http://localhost:15672/</endpoint>
+      <endpoint>${endpoint}:${port}/</endpoint>
       <resource>api/queues/%2F/QueueName</resource>
     </configuration>
 
@@ -56,14 +56,14 @@ do so, you can add the placeholder *%4T* to the resource tag and add the
 separated list of placeholder values.
 
     <configuration>
-      <endpoint>http://localhost:8099/</endpoint>
+      <endpoint>${endpoint}:${port}/</endpoint>
       <resource>auth/admin/realms/%4T/clients</resource>
       <realms>realm1, realm2</realms>
     </configuration>
 
 In the example above you can see how a request is executed on the endpoint 
-*http://localhost:8099/auth/admin/realms/realm1/clients* and 
-*http://localhost:8099/auth/admin/realms/realm2/clients*.
+*${endpoint}:${port}/auth/admin/realms/realm1/clients* and 
+*${endpoint}:${port}/auth/admin/realms/realm2/clients*.
 
 
 ## REST method
