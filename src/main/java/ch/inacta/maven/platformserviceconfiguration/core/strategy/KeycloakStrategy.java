@@ -1,4 +1,4 @@
-package ch.inacta.isp.platformserviceconfiguration.core.strategy;
+package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.form;
@@ -20,7 +20,7 @@ import javax.ws.rs.core.Response;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
-import ch.inacta.isp.platformserviceconfiguration.core.model.AccessTokenResponse;
+import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
 
 /**
  * Strategy to handle keycloak specific authorization.

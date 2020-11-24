@@ -21,7 +21,7 @@ platformserviceconfiguration-maven-plugin and add a pluginManagement entry.
       <pluginManagement>
         <plugins>
           <plugin>
-            <groupId>ch.inacta.isp</groupId>
+            <groupId>ch.inacta.maven</groupId>
             <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
             <version>1.0.0-SNAPSHOT</version>
           </plugin>
@@ -30,7 +30,7 @@ platformserviceconfiguration-maven-plugin and add a pluginManagement entry.
       ....
       <plugins>
         <plugin>
-          <groupId>ch.inacta.isp</groupId>
+          <groupId>ch.inacta.maven</groupId>
           <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
           ....
         </plugin>

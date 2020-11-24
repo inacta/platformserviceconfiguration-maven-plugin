@@ -1,4 +1,4 @@
-package ch.inacta.isp.platformserviceconfiguration.core.strategy;
+package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Base64.getEncoder;
@@ -10,7 +10,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
-import ch.inacta.isp.platformserviceconfiguration.core.model.AccessTokenResponse;
+import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
 
 /**
  * Strategy to handle rabbitmq specific authorization.

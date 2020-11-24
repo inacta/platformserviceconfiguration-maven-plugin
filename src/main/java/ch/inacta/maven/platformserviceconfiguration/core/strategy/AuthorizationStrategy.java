@@ -1,4 +1,4 @@
-package ch.inacta.isp.platformserviceconfiguration.core.strategy;
+package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
 import java.util.Map;
 
@@ -6,7 +6,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
-import ch.inacta.isp.platformserviceconfiguration.core.model.AccessTokenResponse;
+import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
 
 /**
  * Interface for authorization strategies

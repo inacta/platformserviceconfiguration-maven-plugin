@@ -9,7 +9,7 @@
     <version>50</version>
   </parent>
 
-  <groupId>ch.inacta.isp</groupId>
+  <groupId>ch.inacta.maven</groupId>
   <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 

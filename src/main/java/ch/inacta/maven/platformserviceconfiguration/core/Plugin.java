@@ -1,4 +1,4 @@
-package ch.inacta.isp.platformserviceconfiguration.core;
+package ch.inacta.maven.platformserviceconfiguration.core;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -23,6 +23,7 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import ch.inacta.maven.platformserviceconfiguration.core.strategy.AuthorizationStrategy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
@@ -31,10 +32,9 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
-import ch.inacta.isp.platformserviceconfiguration.core.model.AccessTokenResponse;
-import ch.inacta.isp.platformserviceconfiguration.core.strategy.AuthorizationStrategy;
-import ch.inacta.isp.platformserviceconfiguration.core.strategy.KeycloakStrategy;
-import ch.inacta.isp.platformserviceconfiguration.core.strategy.RabbitMQStrategy;
+import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
+import ch.inacta.maven.platformserviceconfiguration.core.strategy.KeycloakStrategy;
+import ch.inacta.maven.platformserviceconfiguration.core.strategy.RabbitMQStrategy;
 
 /**
  * Platformservice configuration plugin implementation.

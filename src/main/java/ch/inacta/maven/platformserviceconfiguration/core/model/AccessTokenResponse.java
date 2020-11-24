@@ -1,4 +1,4 @@
-package ch.inacta.isp.platformserviceconfiguration.core.model;
+package ch.inacta.maven.platformserviceconfiguration.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
