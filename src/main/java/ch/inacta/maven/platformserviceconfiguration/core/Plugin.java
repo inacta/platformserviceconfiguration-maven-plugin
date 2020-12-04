@@ -23,7 +23,6 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import ch.inacta.maven.platformserviceconfiguration.core.strategy.AuthorizationStrategy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
@@ -33,6 +32,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
+import ch.inacta.maven.platformserviceconfiguration.core.strategy.AuthorizationStrategy;
 import ch.inacta.maven.platformserviceconfiguration.core.strategy.KeycloakStrategy;
 import ch.inacta.maven.platformserviceconfiguration.core.strategy.RabbitMQStrategy;
 
@@ -201,10 +201,16 @@ public class Plugin extends AbstractMojo {
 
         final AuthorizationStrategy strategy;
 
-        if (getApp().equalsIgnoreCase("keycloak")) {
+        switch (getApp().toUpperCase()) {
+        case "KEYCLOAK":
             strategy = new KeycloakStrategy(getLog());
-        } else {
+            break;
+        case "RABBITMQ":
             strategy = new RabbitMQStrategy();
+            break;
+        default:
+            getLog().error(format("Unknown authorization strategy. Please check your configuration."));
+            throw new MojoExecutionException(format("Unknown authorization strategy. Strategy [%s] is not supported", getApp()));
         }
 
         getLog().info(format("Selected authorization strategy: [%s]", strategy.getStrategyName()));
