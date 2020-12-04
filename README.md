@@ -23,7 +23,7 @@ platformserviceconfiguration-maven-plugin and add a pluginManagement entry.
           <plugin>
             <groupId>ch.inacta.maven</groupId>
             <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0-SNAPSHOT</version>
           </plugin>
         </plugins>
       </pluginManagement>
