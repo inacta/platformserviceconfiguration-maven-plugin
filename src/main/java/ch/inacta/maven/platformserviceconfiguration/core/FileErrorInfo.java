@@ -27,8 +27,6 @@ public class FileErrorInfo extends ErrorInfo {
     @Override
     public String toString() {
 
-        final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(this.filename).append(": ").append(super.toString());
-        return stringBuilder.toString();
+        return this.filename + ": " + super.toString();
     }
 }

@@ -28,8 +28,6 @@ public class ErrorInfo {
     @Override
     public String toString() {
 
-        final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(" [").append(this.errorCode).append(":").append(this.message).append("]");
-        return stringBuilder.toString();
+        return " [" + this.errorCode + ":" + this.message + "]";
     }
 }

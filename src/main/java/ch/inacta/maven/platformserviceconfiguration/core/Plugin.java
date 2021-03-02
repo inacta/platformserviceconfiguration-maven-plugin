@@ -1,7 +1,6 @@
 package ch.inacta.maven.platformserviceconfiguration.core;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static javax.ws.rs.client.ClientBuilder.newClient;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.client.Entity.form;
@@ -95,7 +94,7 @@ public class Plugin extends AbstractMojo {
         }
 
         if (!errorInfos.isEmpty()) {
-            throw new MojoExecutionException(format("Unable to process files: %n%s", wrap(" ", "%n", errorInfos)));
+            throw new MojoExecutionException(format("Unable to process files: %n%s", wrap(errorInfos)));
         }
     }
 
@@ -179,7 +178,7 @@ public class Plugin extends AbstractMojo {
         final List<String> resourcePaths = new ArrayList<>();
 
         if (!getRealms().isEmpty()) {
-            final List<String> configuredRealms = asList(getRealms().replace(" ", "").split(","));
+            final String[] configuredRealms = getRealms().replace(" ", "").split(",");
 
             if (!getResource().contains(REALM_PLACEHOLDER)) {
                 throw new MojoExecutionException(format("No placeholder symbol '%s' for realms found!", REALM_PLACEHOLDER));
@@ -209,7 +208,7 @@ public class Plugin extends AbstractMojo {
             strategy = new RabbitMQStrategy();
             break;
         default:
-            getLog().error(format("Unknown authorization strategy. Please check your configuration."));
+            getLog().error("Unknown authorization strategy. Please check your configuration.");
             throw new MojoExecutionException(format("Unknown authorization strategy. Strategy [%s] is not supported", getApp()));
         }
 
@@ -232,17 +231,15 @@ public class Plugin extends AbstractMojo {
     private void setHeaders(final Invocation.Builder builder, final AccessTokenResponse accessTokenResponse) {
 
         if (accessTokenResponse != null) {
-            final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(accessTokenResponse.getTokenType()).append(" ").append(accessTokenResponse.getAccessToken());
-            builder.header("Authorization", stringBuilder.toString());
+            builder.header("Authorization", accessTokenResponse.getTokenType() + " " + accessTokenResponse.getAccessToken());
         }
     }
 
-    private <T> String wrap(final String prefix, final String suffix, final List<T> tokens) {
+    private <T> String wrap(final List<T> tokens) {
 
         final StringBuilder stringBuilder = new StringBuilder();
         for (final T token : tokens) {
-            stringBuilder.append(prefix).append(token.toString()).append(suffix);
+            stringBuilder.append(" ").append(token.toString()).append("%n");
         }
         return stringBuilder.toString();
     }
