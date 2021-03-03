@@ -1,4 +1,4 @@
-package ch.inacta.maven.platformserviceconfiguration.core;
+package ch.inacta.maven.platformserviceconfiguration.core.model;
 
 /**
  * Representation of an error info

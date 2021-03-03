@@ -1,4 +1,4 @@
-package ch.inacta.maven.platformserviceconfiguration.core;
+package ch.inacta.maven.platformserviceconfiguration.core.model;
 
 /**
  * Representation of a file error info

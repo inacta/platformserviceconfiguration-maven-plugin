@@ -1,4 +1,4 @@
-package ch.inacta.maven.platformserviceconfiguration.core;
+package ch.inacta.maven.platformserviceconfiguration.core.util;
 
 import static java.lang.String.format;
 import static org.codehaus.plexus.util.FileUtils.getFiles;
