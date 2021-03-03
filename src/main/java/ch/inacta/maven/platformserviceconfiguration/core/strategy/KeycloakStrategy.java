@@ -1,6 +1,8 @@
 package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
 import static java.lang.String.format;
+import static javax.ws.rs.client.ClientBuilder.newClient;
+import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.client.Entity.form;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -9,102 +11,147 @@ import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static org.apache.commons.lang3.StringUtils.join;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
+import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
 import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
+import ch.inacta.maven.platformserviceconfiguration.core.model.ErrorInfo;
+import ch.inacta.maven.platformserviceconfiguration.core.model.FileErrorInfo;
 
 /**
- * Strategy to handle keycloak specific authorization.
+ * Strategy to handle keycloak specific authorization and functionalities.
  *
  * @author Inacta AG
  * @since 1.0.0
  */
-public class KeycloakStrategy implements AuthorizationStrategy {
+class KeycloakStrategy {
 
     private static final String AUTHORIZATION_RESOURCE = "auth/realms/master/protocol/openid-connect/token";
-    private static final MediaType REQUEST_TYPE = APPLICATION_JSON_TYPE;
-    private static final MediaType RESPONSE_TYPE = APPLICATION_OCTET_STREAM_TYPE;
-    private static final String GRANT_TYPE = "password";
-    private static final String CLIENT_ID = "admin-cli";
+    private static final String CLIENT_ID = "client_id";
+    private static final String GRANT_TYPE = "grant_type";
+    private static final String PASSWORD = "password";
+    private static final String ADMIN_CLI = "admin-cli";
+    private static final String REALM_PLACEHOLDER = "%4T";
 
+    private final Plugin plugin;
     private final Log logger;
-    private WebTarget webTarget;
 
     /**
      * Default constructor
-     * 
-     * @param logger
-     *            to write logs
+     *
+     * @param plugin
+     *            this plugin with all the called parameters
      */
-    public KeycloakStrategy(final Log logger) {
+    KeycloakStrategy(final Plugin plugin) {
 
-        this.logger = logger;
+        this.plugin = plugin;
+        this.logger = plugin.getLog();
     }
 
-    @Override
-    public AccessTokenResponse authorize(final Map<String, String> authParams) throws MojoExecutionException {
+    /**
+     * Admin REST API call for the given resources with the JSON files.
+     */
+    void postJSONFiles() throws MojoExecutionException {
 
-        if (this.webTarget == null) {
-            throw new MojoExecutionException("No webtarget has been set!");
+        final List<ErrorInfo> errorInfos = new ArrayList<>();
+
+        for (final String resourcePath : getResourcePaths()) {
+            final Invocation.Builder builder = createClientBuilder(resourcePath);
+            errorInfos.addAll(executeRequests(builder));
         }
 
-        if (!authParams.containsKey("grant_type")) {
-            authParams.put("grant_type", GRANT_TYPE);
+        if (!errorInfos.isEmpty()) {
+            throw new MojoExecutionException(format("Unable to process files: %n%s", wrap(errorInfos)));
         }
-        if (!authParams.containsKey("client_id")) {
-            authParams.put("client_id", CLIENT_ID);
+    }
+
+    private List<String> getResourcePaths() throws MojoExecutionException {
+
+        final List<String> resourcePaths = new ArrayList<>();
+
+        if (this.plugin.getRealms().isEmpty()) {
+
+            if (this.plugin.getResource().contains(REALM_PLACEHOLDER)) {
+                throw new MojoExecutionException("No realms are defined!");
+            }
+            resourcePaths.add(this.plugin.getResource());
+
+        } else {
+
+            if (!this.plugin.getResource().contains(REALM_PLACEHOLDER)) {
+                throw new MojoExecutionException(format("No placeholder symbol '%s' for realms found!", REALM_PLACEHOLDER));
+            }
+
+            for (final String realm : this.plugin.getRealms().replace(" ", "").split(",")) {
+                resourcePaths.add(this.plugin.getResource().replace(REALM_PLACEHOLDER, realm));
+            }
         }
 
-        this.webTarget = this.webTarget.path(AUTHORIZATION_RESOURCE);
-        final Invocation.Builder builder = this.webTarget.request(APPLICATION_FORM_URLENCODED_TYPE).accept(APPLICATION_JSON);
-        final Response response = builder.method("POST", form(getFormParameters(authParams)));
+        return resourcePaths;
+    }
+
+    private Invocation.Builder createClientBuilder(final String resourcePath) throws MojoExecutionException {
+
+        final AccessTokenResponse accessTokenResponse = getAccessTokenResponse();
+        return newClient().register(JacksonFeature.class).target(this.plugin.getEndpoint()).path(resourcePath)
+                .request(APPLICATION_JSON_TYPE, APPLICATION_OCTET_STREAM_TYPE)
+                .header("Authorization", accessTokenResponse.getTokenType() + " " + accessTokenResponse.getAccessToken());
+    }
+
+    private AccessTokenResponse getAccessTokenResponse() throws MojoExecutionException {
+
+        if (!this.plugin.getAuthorization().containsKey(GRANT_TYPE)) {
+            this.plugin.getAuthorization().put(GRANT_TYPE, PASSWORD);
+        }
+        if (!this.plugin.getAuthorization().containsKey(CLIENT_ID)) {
+            this.plugin.getAuthorization().put(CLIENT_ID, ADMIN_CLI);
+        }
+
+        final Response response = newClient().register(JacksonFeature.class).target(this.plugin.getEndpoint()).path(AUTHORIZATION_RESOURCE)
+                .request(APPLICATION_FORM_URLENCODED_TYPE).accept(APPLICATION_JSON).post(form(getFormParameters(this.plugin.getAuthorization())));
 
         if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
             return response.readEntity(AccessTokenResponse.class);
         } else {
-            this.logger.error("Failed to authorize request!");
-            this.logger.error(format("Endpoint: POST [%s]", this.webTarget.getUri()));
-            this.logger.error(format("Parameters: %s", join(authParams, ", ")));
+            this.logger.error(format("Failed to authorize request with parameters: %s", join(this.plugin.getAuthorization(), ", ")));
             throw new MojoExecutionException("Failed to authorize request!");
         }
     }
 
-    @Override
-    public MediaType getRequestType() {
+    private List<ErrorInfo> executeRequests(final Invocation.Builder builder) throws MojoExecutionException {
 
-        return REQUEST_TYPE;
+        final List<ErrorInfo> errorInfos = new ArrayList<>();
+
+        for (final File file : this.plugin.getFilesToProcess()) {
+            this.logger.info(format("Submitting file [%s]", file.toString()));
+            final Optional<ErrorInfo> result = processResponse(builder.post(entity(file, APPLICATION_JSON_TYPE)));
+            result.ifPresent(errorInfo -> errorInfos.add(new FileErrorInfo(file.getPath(), errorInfo)));
+        }
+
+        return errorInfos;
     }
 
-    @Override
-    public MediaType getResponseType() {
+    private Optional<ErrorInfo> processResponse(final Response response) {
 
-        return RESPONSE_TYPE;
-    }
-
-    @Override
-    public String getStrategyName() {
-
-        return "KeycloakStrategy";
-    }
-
-    /**
-     * Sets the webtarget to get the access token
-     *
-     * @param webTarget
-     *            webtarget to the authorization endpoint
-     */
-    public void setWebTarget(final WebTarget webTarget) {
-
-        this.webTarget = webTarget;
+        if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
+            this.logger.info(format("Status: [%d]", response.getStatus()));
+            return Optional.empty();
+        } else {
+            this.logger.warn(format("Error code: [%d]", response.getStatus()));
+            return Optional.of(new ErrorInfo(response.getStatus(), response.getEntity().toString()));
+        }
     }
 
     private Form getFormParameters(final Map<String, String> formParams) {
@@ -115,5 +162,14 @@ public class KeycloakStrategy implements AuthorizationStrategy {
             this.logger.debug(format("Form-param [%s:%s]", entry.getKey(), entry.getValue()));
         }
         return form;
+    }
+
+    private <T> String wrap(final List<T> tokens) {
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        for (final T token : tokens) {
+            stringBuilder.append(" ").append(token.toString()).append("%n");
+        }
+        return stringBuilder.toString();
     }
 }
