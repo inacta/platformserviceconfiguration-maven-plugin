@@ -28,9 +28,9 @@ import ch.inacta.maven.platformserviceconfiguration.core.util.FileSetTransformer
 @Mojo(name = "configure")
 public class Plugin extends AbstractMojo {
 
-    @Parameter(property = "strategy",
+    @Parameter(property = "application",
             required = true)
-    private ApplicationStrategy strategy;
+    private ApplicationStrategy application;
 
     @Parameter(property = "authorization",
             required = true)
@@ -62,10 +62,10 @@ public class Plugin extends AbstractMojo {
             throw new MojoExecutionException("Tag 'password' has to be defined in authorization!");
         }
 
-        getLog().info(format("Selected authorization strategy: [%s]", this.strategy));
+        getLog().info(format("Selected application strategy: [%s]", this.application));
         getLog().info(format("Endpoint: [%s]", this.endpoint));
 
-        this.strategy.execute(this);
+        this.application.execute(this);
     }
 
     /**

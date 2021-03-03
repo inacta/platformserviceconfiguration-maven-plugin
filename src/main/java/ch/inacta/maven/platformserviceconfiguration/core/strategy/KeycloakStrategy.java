@@ -31,7 +31,7 @@ import ch.inacta.maven.platformserviceconfiguration.core.model.ErrorInfo;
 import ch.inacta.maven.platformserviceconfiguration.core.model.FileErrorInfo;
 
 /**
- * Strategy to handle keycloak specific authorization and functionalities.
+ * Strategy to handle Keycloak specific authorization and functionalities.
  *
  * @author Inacta AG
  * @since 1.0.0

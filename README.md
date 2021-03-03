@@ -38,11 +38,11 @@ To use this plugin and start working with it, declare the
 
 ## Application strategy
 
-The *strategy* tag specifies which application should be configured. Supported 
-applications by now are *KEYCLOAK* and *RABBITMQ*.
+The *application* tag specifies which application should be configured. Supported 
+application strategies by now are *KEYCLOAK* and *RABBITMQ*.
 
     <configuration>
-      <strategy>KEYCLOAK</strategy>
+      <application>KEYCLOAK</application>
     </configuration>
 
 ## REST URL endpoint
@@ -78,7 +78,7 @@ The requests need authorization, so the *authorization* tag must be added.
 To work properly, at least the *username* and *password* have to be specified:
 
     <configuration>
-      <strategy>KEYCLOAK</strategy>
+      <application>KEYCLOAK</application>
       <authorization>
         <username>${username}</username>
         <password>${password}</password>
@@ -90,7 +90,7 @@ be specified for the *KEYCLOAK* strategy. Each parameter will be added
 to the request header:
 
     <configuration>
-      <strategy>KEYCLOAK</strategy>
+      <application>KEYCLOAK</application>
       <authorization>
         <username>${username}</username>
         <password>${password}</password>

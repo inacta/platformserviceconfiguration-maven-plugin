@@ -21,7 +21,7 @@ import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenRespon
 import ch.inacta.maven.platformserviceconfiguration.core.model.ErrorInfo;
 
 /**
- * Strategy to handle rabbitmq specific authorization and functionalities.
+ * Strategy to handle RabbitMQ specific authorization and functionalities.
  *
  * @author Inacta AG
  * @since 1.0.0
@@ -44,7 +44,7 @@ class RabbitMQStrategy {
     }
 
     /**
-     * REST API call to create a queue
+     * REST API call to create a queue.
      */
     void createQueue() throws MojoExecutionException {
 
