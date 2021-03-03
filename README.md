@@ -1,19 +1,18 @@
 # platformserviceconfiguration-maven-plugin
 
-This plugin is meant to provide an easy way to configure services like keycloak or 
-rabbitmq via REST calls. This means it is only possible to perform PUT and POST 
-requests.
+This Maven plugin is meant to provide an easy way to configure services like Keycloak or 
+RabbitMQ via REST calls.
 
 
-## Available goals
+## Available goal
 
-* configure
+* *configure*
 
 
 ## Getting started
 
 To use this plugin and start working with it, declare the 
-platformserviceconfiguration-maven-plugin and add a pluginManagement entry.
+*platformserviceconfiguration-maven-plugin* and add a *pluginManagement* entry.
 
     <packaging>pom</packaging>
     ....
@@ -37,23 +36,31 @@ platformserviceconfiguration-maven-plugin and add a pluginManagement entry.
       </plugins>
     </build>
 
+## Application strategy
+
+The *strategy* tag specifies which application should be configured. Supported 
+applications by now are *KEYCLOAK* and *RABBITMQ*.
+
+    <configuration>
+      <strategy>KEYCLOAK</strategy>
+    </configuration>
 
 ## REST URL endpoint
 
 The REST URL endpoint is specified via two parameters, the *endpoint* and 
-the *resource*. The components are separated so that mapping separate 
-execution configurations to different *resource* extensions can still share 
-the same base *endpoint* setting.
+the *resource*. These two parameter are separated so that separate execution 
+configurations to different *resources* can still share the same base *endpoint*
+setting.
 
     <configuration>
       <endpoint>${endpoint}:${port}/</endpoint>
       <resource>api/queues/%2F/QueueName</resource>
     </configuration>
 
-A REST request can be executed on multiple resources of one endpoint. To 
-do so, you can add the placeholder *%4T* to the resource tag and add the 
-*realms* tag to the configuration. The *realms* tag expects a comma 
-separated list of placeholder values.
+A REST request for Keycloak can be executed on multiple resources of one 
+endpoint. To do so, you can add the placeholder *%4T* to the resource tag 
+and add the *realms* tag to the configuration. The *realms* tag expects a 
+comma separated list of placeholder values.
 
     <configuration>
       <endpoint>${endpoint}:${port}/</endpoint>
@@ -65,59 +72,25 @@ In the example above you can see how a request is executed on the endpoint
 *${endpoint}:${port}/auth/admin/realms/realm1/clients* and 
 *${endpoint}:${port}/auth/admin/realms/realm2/clients*.
 
-
-## REST method
-
-The REST request method can be configured by adding the *method* tag. 
-Supported methods are PUT and POST. The default value is POST. Because 
-it is a configuration plugin it does not support GET requests.
-
-    <configuration>
-      <method>POST</method>
-    </configuration>
-
-
-## REST request type
-
-The REST request type can be configured via the *requestType* tag. 
-The default for requests is 'application/json'.
-
-The request type parameter uses the *MediaType* datatype and 
-consequently can be configured using the tags of the *MediaType* 
-object. For example:
-
-    <configuration>
-      <requestType>
-        <type>application</type>
-        <subtype>json</subtype>
-      </requestType>
-    </configuration>
-
-
 ## REST authorization
 
-If the request needs an additional authorization, the *authorization* 
-tag can be added. To work properly at least the *username* and 
-*password* have to be specified.
-
-In addition to the *authorization* tag the *app* tag has to be 
-defined. With the *app* tag it can be specified what kind of 
-application it is. Supported applications are *keycloak* and 
-*rabbitmq*.
+The requests need authorization, so the *authorization* tag must be added. 
+To work properly, at least the *username* and *password* have to be specified:
 
     <configuration>
-      <app>keycloak</app>
+      <strategy>KEYCLOAK</strategy>
       <authorization>
         <username>${username}</username>
         <password>${password}</password>
       </authorization>
     </configuration>
 
-If wanted any number of additional *authorization* parameters can 
-be specified. Each parameter will be added to the request header.
+If wanted, any number of additional *authorization* parameters can 
+be specified for the *KEYCLOAK* strategy. Each parameter will be added 
+to the request header:
 
     <configuration>
-      <app>keycloak</app>
+      <strategy>KEYCLOAK</strategy>
       <authorization>
         <username>${username}</username>
         <password>${password}</password>
@@ -130,7 +103,7 @@ be specified. Each parameter will be added to the request header.
 
 ## Adding source directories
 
-To specify the input *fileSet* you can add the following 
+To specify the input *fileSet*, you can add the following 
 configurations. To use a single *fileSet*:
 
     <configuration>
