@@ -1,55 +1,46 @@
 package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
 import static java.lang.String.format;
-import static javax.ws.rs.client.ClientBuilder.newClient;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.client.Entity.form;
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE;
-import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.join;
+import static org.keycloak.OAuth2Constants.PASSWORD;
+import static org.keycloak.OAuth2Constants.USERNAME;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.Response;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.glassfish.jersey.jackson.JacksonFeature;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.keycloak.util.JsonSerialization;
+
+import com.google.common.collect.ImmutableList;
 
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
-import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
-import ch.inacta.maven.platformserviceconfiguration.core.model.ErrorInfo;
-import ch.inacta.maven.platformserviceconfiguration.core.model.FileErrorInfo;
 
 /**
- * Strategy to handle Keycloak specific authorization and functionalities.
+ * Strategy to handle Keycloak specific configuration tasks.
  *
  * @author Inacta AG
  * @since 1.0.0
  */
 class KeycloakStrategy {
 
-    private static final String AUTHORIZATION_RESOURCE = "auth/realms/master/protocol/openid-connect/token";
-    private static final String CLIENT_ID = "client_id";
-    private static final String GRANT_TYPE = "grant_type";
-    private static final String PASSWORD = "password";
     private static final String ADMIN_CLI = "admin-cli";
-    private static final String REALM_PLACEHOLDER = "%4T";
-
     private final Plugin plugin;
     private final Log logger;
 
     /**
-     * Default constructor
+     * Default constructor.
      *
      * @param plugin
      *            this plugin with all the called parameters
@@ -61,115 +52,113 @@ class KeycloakStrategy {
     }
 
     /**
-     * Admin REST API call for the given resources with the JSON files.
+     * Creates the configured Keycloak resource by processing all configured JSON files.
      */
-    void postJSONFiles() throws MojoExecutionException {
+    void importFiles() throws MojoExecutionException {
 
-        final List<ErrorInfo> errorInfos = new ArrayList<>();
+        final KeycloakResource keycloakResource = KeycloakResource.fromString(this.plugin.getResource()).orElseThrow(
+                () -> new MojoExecutionException(format("Tag 'resource' must be one of the values: [%s]", join(KeycloakResource.values(), ", "))));
 
-        for (final String resourcePath : getResourcePaths()) {
-            final Invocation.Builder builder = createClientBuilder(resourcePath);
-            errorInfos.addAll(executeRequests(builder));
-        }
+        final Keycloak keycloak = initializeKeycloakClient();
 
-        if (!errorInfos.isEmpty()) {
-            throw new MojoExecutionException(format("Unable to process files: %n%s", wrap(errorInfos)));
-        }
-    }
+        for (final File jsonFile : this.plugin.getFilesToProcess()) {
 
-    private List<String> getResourcePaths() throws MojoExecutionException {
+            for (final String realm : keycloakResource.getRealms(this.plugin.getRealms())) {
 
-        final List<String> resourcePaths = new ArrayList<>();
+                this.logger.info(format("Create %s %s with JSON [%s]", keycloakResource.toString(), realm.isBlank() ? "\b" : "for " + realm,
+                        jsonFile.getName()));
+                try (final InputStream inputStream = new FileInputStream(jsonFile)) {
+                    keycloakResource.create(keycloak, realm, inputStream);
+                } catch (final IOException e) {
+                    throw new MojoExecutionException(format("Failed to open: [%s]", jsonFile.getAbsolutePath()));
+                }
 
-        if (this.plugin.getRealms().isEmpty()) {
-
-            if (this.plugin.getResource().contains(REALM_PLACEHOLDER)) {
-                throw new MojoExecutionException("No realms are defined!");
-            }
-            resourcePaths.add(this.plugin.getResource());
-
-        } else {
-
-            if (!this.plugin.getResource().contains(REALM_PLACEHOLDER)) {
-                throw new MojoExecutionException(format("No placeholder symbol '%s' for realms found!", REALM_PLACEHOLDER));
             }
 
-            for (final String realm : this.plugin.getRealms().replace(" ", "").split(",")) {
-                resourcePaths.add(this.plugin.getResource().replace(REALM_PLACEHOLDER, realm));
+        }
+    }
+
+    private Keycloak initializeKeycloakClient() {
+
+        return KeycloakBuilder.builder().serverUrl(this.plugin.getEndpoint() + "/auth").realm("master")
+                .username(this.plugin.getAuthorization().get(USERNAME)).password(this.plugin.getAuthorization().get(PASSWORD)).clientId(ADMIN_CLI)
+                .build();
+    }
+
+    private enum KeycloakResource {
+
+        REALMS {
+
+            @Override
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final RealmRepresentation representation = loadJSON(inputStream, RealmRepresentation.class);
+                keycloak.realms().create(representation);
+            }
+
+            @Override
+            List<String> getRealms(final String realms) {
+
+                // we just need one element, the realm name is irrelevant
+                return ImmutableList.of("");
+            }
+        },
+        CLIENTS {
+
+            @Override
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final ClientRepresentation representation = loadJSON(inputStream, ClientRepresentation.class);
+                keycloak.realm(realm).clients().create(representation);
+            }
+        },
+        USERS {
+
+            @Override
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final UserRepresentation representation = loadJSON(inputStream, UserRepresentation.class);
+                keycloak.realm(realm).users().create(representation);
+            }
+        };
+
+        /**
+         * Creates the Keycloak resource with the Keycloak client.
+         * 
+         * @param keycloak
+         *            the Keycloak client
+         * @param realm
+         *            the name of the realm for which the Keycloak resource has to be created
+         * @param inputStream
+         *            the JSON definition file of the Keycloak resource
+         */
+        abstract void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException;
+
+        /**
+         * Gets all realms from a comma separated {@code String} for which the Keycloak resource has to be created.
+         *
+         * @param realms
+         *            the comma separated {@code String} with realm names
+         * @return possible object is {@code List<String>}
+         */
+        List<String> getRealms(final String realms) {
+
+            return asList(realms.replace(" ", "").split(","));
+        }
+
+        private static Optional<KeycloakResource> fromString(final String resource) {
+
+            return Arrays.stream(KeycloakResource.values()).filter(keycloakResource -> keycloakResource.toString().equalsIgnoreCase(resource))
+                    .findAny();
+        }
+
+        private static <T> T loadJSON(final InputStream is, final Class<T> type) throws MojoExecutionException {
+
+            try {
+                return JsonSerialization.readValue(is, type);
+            } catch (final IOException e) {
+                throw new MojoExecutionException("Failed to parse json!");
             }
         }
-
-        return resourcePaths;
-    }
-
-    private Invocation.Builder createClientBuilder(final String resourcePath) throws MojoExecutionException {
-
-        final AccessTokenResponse accessTokenResponse = getAccessTokenResponse();
-        return newClient().register(JacksonFeature.class).target(this.plugin.getEndpoint()).path(resourcePath)
-                .request(APPLICATION_JSON_TYPE, APPLICATION_OCTET_STREAM_TYPE)
-                .header("Authorization", accessTokenResponse.getTokenType() + " " + accessTokenResponse.getAccessToken());
-    }
-
-    private AccessTokenResponse getAccessTokenResponse() throws MojoExecutionException {
-
-        if (!this.plugin.getAuthorization().containsKey(GRANT_TYPE)) {
-            this.plugin.getAuthorization().put(GRANT_TYPE, PASSWORD);
-        }
-        if (!this.plugin.getAuthorization().containsKey(CLIENT_ID)) {
-            this.plugin.getAuthorization().put(CLIENT_ID, ADMIN_CLI);
-        }
-
-        final Response response = newClient().register(JacksonFeature.class).target(this.plugin.getEndpoint()).path(AUTHORIZATION_RESOURCE)
-                .request(APPLICATION_FORM_URLENCODED_TYPE).accept(APPLICATION_JSON).post(form(getFormParameters(this.plugin.getAuthorization())));
-
-        if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
-            return response.readEntity(AccessTokenResponse.class);
-        } else {
-            this.logger.error(format("Failed to authorize request with parameters: %s", join(this.plugin.getAuthorization(), ", ")));
-            throw new MojoExecutionException("Failed to authorize request!");
-        }
-    }
-
-    private List<ErrorInfo> executeRequests(final Invocation.Builder builder) throws MojoExecutionException {
-
-        final List<ErrorInfo> errorInfos = new ArrayList<>();
-
-        for (final File file : this.plugin.getFilesToProcess()) {
-            this.logger.info(format("Submitting file [%s]", file.toString()));
-            final Optional<ErrorInfo> result = processResponse(builder.post(entity(file, APPLICATION_JSON_TYPE)));
-            result.ifPresent(errorInfo -> errorInfos.add(new FileErrorInfo(file.getPath(), errorInfo)));
-        }
-
-        return errorInfos;
-    }
-
-    private Optional<ErrorInfo> processResponse(final Response response) {
-
-        if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
-            this.logger.info(format("Status: [%d]", response.getStatus()));
-            return Optional.empty();
-        } else {
-            this.logger.warn(format("Error code: [%d]", response.getStatus()));
-            return Optional.of(new ErrorInfo(response.getStatus(), response.getEntity().toString()));
-        }
-    }
-
-    private Form getFormParameters(final Map<String, String> formParams) {
-
-        final Form form = new Form();
-        for (final Map.Entry<String, String> entry : formParams.entrySet()) {
-            form.param(entry.getKey(), entry.getValue());
-            this.logger.debug(format("Form-param [%s:%s]", entry.getKey(), entry.getValue()));
-        }
-        return form;
-    }
-
-    private <T> String wrap(final List<T> tokens) {
-
-        final StringBuilder stringBuilder = new StringBuilder();
-        for (final T token : tokens) {
-            stringBuilder.append(" ").append(token.toString()).append("%n");
-        }
-        return stringBuilder.toString();
     }
 }

@@ -42,6 +42,8 @@
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
     <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
 
+    <keycloak.admin.client.version>12.0.4</keycloak.admin.client.version>
+
     <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
     <maven.compiler.release>11</maven.compiler.release>
 
@@ -105,6 +107,11 @@
         <artifactId>jersey-media-json-jackson</artifactId>
         <version>${glassfish.jersey.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.keycloak</groupId>
+        <artifactId>keycloak-admin-client</artifactId>
+        <version>${keycloak.admin.client.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -144,6 +151,10 @@
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-json-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-admin-client</artifactId>
     </dependency>
   </dependencies>
 

@@ -17,7 +17,7 @@ public enum ApplicationStrategy {
         @Override
         public void execute(final Plugin plugin) throws MojoExecutionException {
 
-            new KeycloakStrategy(plugin).postJSONFiles();
+            new KeycloakStrategy(plugin).importFiles();
         }
     },
     RABBITMQ {
