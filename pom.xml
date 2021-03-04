@@ -36,8 +36,6 @@
 
     <glassfish.jersey.version>2.22.1</glassfish.jersey.version>
 
-    <io.minio.version>8.1.0</io.minio.version>
-
     <javax.activation>1.1.1</javax.activation>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
     <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
@@ -49,6 +47,8 @@
 
     <maven.plugin.api.version>3.3.9</maven.plugin.api.version>
     <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
+
+    <minio.client.version>8.1.0</minio.client.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -64,7 +64,7 @@
       <dependency>
         <groupId>io.minio</groupId>
         <artifactId>minio</artifactId>
-        <version>${io.minio.version}</version>
+        <version>${minio.client.version}</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>

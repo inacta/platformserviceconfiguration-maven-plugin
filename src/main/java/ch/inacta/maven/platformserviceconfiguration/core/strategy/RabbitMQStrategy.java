@@ -30,7 +30,7 @@ import ch.inacta.maven.platformserviceconfiguration.core.model.ErrorInfo;
 class RabbitMQStrategy {
 
     private static final String BASIC_TOKEN_TYPE = "Basic";
-    private static final String REST_API_FOR_CREATING_QUEUE = "api/queues/";
+    private static final String REST_ENDPOINT_FOR_CREATING_QUEUE = "api/queues/";
     private final Plugin plugin;
 
     /**
@@ -53,7 +53,7 @@ class RabbitMQStrategy {
             throw new MojoExecutionException("Tag 'resource' has to be defined with the queue name!");
         }
 
-        final Response response = executeRequest(REST_API_FOR_CREATING_QUEUE + this.plugin.getResource());
+        final Response response = executeRequest(REST_ENDPOINT_FOR_CREATING_QUEUE + this.plugin.getResource());
         processResponse(response);
     }
 
@@ -81,7 +81,7 @@ class RabbitMQStrategy {
     private void processResponse(final Response response) throws MojoExecutionException {
 
         if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
-            this.plugin.getLog().info(format("Queue [%s] successfully created, status: [%d]", this.plugin.getResource(), response.getStatus()));
+            this.plugin.getLog().info(format("Queue [%s] successfully created, status code: [%d]", this.plugin.getResource(), response.getStatus()));
         } else {
             this.plugin.getLog().warn(format("Error code: [%d]", response.getStatus()));
             final ErrorInfo errorInfo = new ErrorInfo(response.getStatus(), response.getEntity().toString());
