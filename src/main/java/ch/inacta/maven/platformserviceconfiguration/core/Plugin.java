@@ -3,6 +3,8 @@ package ch.inacta.maven.platformserviceconfiguration.core;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.apache.commons.lang3.StringUtils.join;
+import static org.keycloak.OAuth2Constants.PASSWORD;
+import static org.keycloak.OAuth2Constants.USERNAME;
 
 import java.io.File;
 import java.net.URI;
@@ -20,7 +22,7 @@ import ch.inacta.maven.platformserviceconfiguration.core.strategy.ApplicationStr
 import ch.inacta.maven.platformserviceconfiguration.core.util.FileSetTransformer;
 
 /**
- * Platformservice configuration plugin implementation.
+ * Maven plugin for configuring platform services.
  *
  * @author Inacta AG
  * @since 1.0.0
@@ -52,15 +54,13 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "realms")
     private String realms;
 
+    @Parameter(property = "bucket")
+    private String bucket;
+
     @Override
     public void execute() throws MojoExecutionException {
 
-        if (!this.authorization.containsKey("username")) {
-            throw new MojoExecutionException("Tag 'username' has to be defined in authorization!");
-        }
-        if (!this.authorization.containsKey("password")) {
-            throw new MojoExecutionException("Tag 'password' has to be defined in authorization!");
-        }
+        validateAuthorization();
 
         getLog().info(format("Selected application strategy: [%s]", this.application));
         getLog().info(format("Endpoint: [%s]", this.endpoint));
@@ -127,6 +127,26 @@ public class Plugin extends AbstractMojo {
     public String getRealms() {
 
         return requireNonNullElseGet(this.realms, String::new);
+    }
+
+    /**
+     * Gets the value of the bucket property.
+     *
+     * @return possible object is {@link String}
+     */
+    public String getBucket() {
+
+        return requireNonNullElseGet(this.bucket, String::new);
+    }
+
+    private void validateAuthorization() throws MojoExecutionException {
+
+        if (!this.authorization.containsKey(USERNAME)) {
+            throw new MojoExecutionException("Tag 'username' has to be defined in authorization!");
+        }
+        if (!this.authorization.containsKey(PASSWORD)) {
+            throw new MojoExecutionException("Tag 'password' has to be defined in authorization!");
+        }
     }
 
     private FileSet getFileSet() {

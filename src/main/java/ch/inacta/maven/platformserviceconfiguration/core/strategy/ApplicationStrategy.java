@@ -5,7 +5,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
 
 /**
- * Enum for different application strategies.
+ * Enum for different application configuration strategies.
  *
  * @author Inacta AG
  * @since 1.0.0
@@ -27,10 +27,18 @@ public enum ApplicationStrategy {
 
             new RabbitMQStrategy(plugin).createQueue();
         }
+    },
+    MINIO {
+
+        @Override
+        public void execute(final Plugin plugin) throws MojoExecutionException {
+
+            new MinioStrategy(plugin).createBucketAndUploadFiles();
+        }
     };
 
     /**
-     * Executes the request.
+     * Executes the request with the corresponding application strategy.
      *
      * @param plugin
      *            this plugin with all the called parameters

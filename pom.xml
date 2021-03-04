@@ -36,6 +36,8 @@
 
     <glassfish.jersey.version>2.22.1</glassfish.jersey.version>
 
+    <io.minio.version>8.1.0</io.minio.version>
+
     <javax.activation>1.1.1</javax.activation>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
     <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
@@ -56,6 +58,11 @@
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jaxb-annotations</artifactId>
         <version>${fasterxml.jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.minio</groupId>
+        <artifactId>minio</artifactId>
+        <version>${io.minio.version}</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -105,6 +112,10 @@
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-jaxb-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.activation</groupId>
