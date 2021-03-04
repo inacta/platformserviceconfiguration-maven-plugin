@@ -1,14 +1,16 @@
 package ch.inacta.maven.platformserviceconfiguration.core;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.Objects.requireNonNullElseGet;
-import static org.apache.commons.lang3.StringUtils.join;
+import static org.apache.commons.lang3.StringUtils.stripStart;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.USERNAME;
 
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +59,9 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "bucket")
     private String bucket;
 
+    @Parameter(property = "relative")
+    private boolean relative;
+
     @Override
     public void execute() throws MojoExecutionException {
 
@@ -69,21 +74,25 @@ public class Plugin extends AbstractMojo {
     }
 
     /**
-     * Gets all files which have to be processed according to the configuration.
+     * Gets all files which have to be processed according to the configuration, including their relative path.
      *
-     * @return possible object is {@code List<File>}
+     * @return possible object is {@code Map<File, String>}
      */
-    public List<File> getFilesToProcess() throws MojoExecutionException {
+    public Map<File, String> getFilesToProcess() throws MojoExecutionException {
 
         if (getFileSet() != null && getFileSet().getDirectory() != null) {
             getFileSets().add(getFileSet());
         }
 
-        final List<File> filesToProcess = new ArrayList<>();
+        final Map<File, String> filesToProcess = new HashMap<>();
         for (final FileSet set : getFileSets()) {
+
             final FileSetTransformer fileSetTransformer = new FileSetTransformer(getLog(), set);
-            filesToProcess.addAll(fileSetTransformer.toFileList());
-            getLog().info(format("Files found: %s", join(fileSetTransformer.toFileList(), "\n")));
+            fileSetTransformer.toFileList().forEach(file -> {
+                final String relativePath = stripStart(file.getAbsolutePath().replace("\\", "/").replace(set.getDirectory().replace("\\", "/"), ""),
+                        "/");
+                filesToProcess.put(file, relativePath);
+            });
         }
 
         return filesToProcess;
@@ -137,6 +146,16 @@ public class Plugin extends AbstractMojo {
     public String getBucket() {
 
         return requireNonNullElseGet(this.bucket, String::new);
+    }
+
+    /**
+     * Gets the value of the relative property.
+     *
+     * @return possible object is boolean
+     */
+    public boolean isRelative() {
+
+        return requireNonNullElse(this.relative, false);
     }
 
     private void validateAuthorization() throws MojoExecutionException {

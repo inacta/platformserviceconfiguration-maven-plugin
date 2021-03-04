@@ -61,7 +61,7 @@ class KeycloakStrategy {
 
         final Keycloak keycloak = initializeKeycloakClient();
 
-        for (final File jsonFile : this.plugin.getFilesToProcess()) {
+        for (final File jsonFile : this.plugin.getFilesToProcess().keySet()) {
 
             for (final String realm : keycloakResource.getRealms(this.plugin.getRealms())) {
 

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -80,18 +81,20 @@ class MinioStrategy {
     private void uploadFiles(final MinioClient minioClient)
             throws InvalidKeyException, IOException, NoSuchAlgorithmException, MojoExecutionException, MinioException {
 
-        for (final File file : this.plugin.getFilesToProcess()) {
+        for (final Map.Entry<File, String> file : this.plugin.getFilesToProcess().entrySet()) {
 
             final String minioPath = getMinioPath(file);
-            minioClient.uploadObject(UploadObjectArgs.builder().bucket(this.bucket).object(minioPath).filename(file.getAbsolutePath()).build());
+            minioClient
+                    .uploadObject(UploadObjectArgs.builder().bucket(this.bucket).object(minioPath).filename(file.getKey().getAbsolutePath()).build());
 
             this.plugin.getLog().info(format("File successfully uploaded: [%s]", minioPath));
         }
     }
 
-    private String getMinioPath(final File file) {
+    private String getMinioPath(final Map.Entry<File, String> file) {
 
+        final String relativePath = this.plugin.isRelative() ? file.getValue() : file.getKey().getName();
         // file will be uploaded to 'resource' path, or if not specified to bucket root
-        return this.plugin.getResource().isBlank() ? file.getName() : join("/", this.plugin.getResource(), file.getName());
+        return this.plugin.getResource().isBlank() ? relativePath : join("/", this.plugin.getResource(), relativePath);
     }
 }
