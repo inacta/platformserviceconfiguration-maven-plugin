@@ -66,15 +66,14 @@ class MinioStrategy {
         }
     }
 
-    private void createBucket(final MinioClient minioClient)
-            throws InvalidKeyException, IOException, NoSuchAlgorithmException, MojoExecutionException, MinioException {
+    private void createBucket(final MinioClient minioClient) throws InvalidKeyException, IOException, NoSuchAlgorithmException, MinioException {
 
         final boolean bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(this.bucket).build());
         if (!bucketExists) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(this.bucket).build());
             this.plugin.getLog().info(format("Bucket created: [%s]", this.bucket));
         } else {
-            throw new MojoExecutionException("Bucket " + this.bucket + " already exists.");
+            this.plugin.getLog().info(format("Bucket [%s] already exists.", this.bucket));
         }
     }
 
