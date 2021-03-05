@@ -148,9 +148,9 @@ strategy:
 
 | Application  | Meaning | Example |
 | ------------ |---------|---------|
-| KEYCLOAK     | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li></ul> | `<resource>REALMS</resource>` |
-| RABBITMQ     | Specifies the queue which has to be created | `<resource>${virtual.host}/${queue}</resource>` |
-| MINIO        | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
+| *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li></ul> | `<resource>REALMS</resource>` |
+| *RABBITMQ*   | Specifies the queue which has to be created | `<resource>${virtual.host}/${queue}</resource>` |
+| *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
 
 
 ### Add application specific parameters
@@ -266,7 +266,8 @@ Create a queue:
 
 ### MinIO
 
-Create a bucket, upload files to bucket root and to a target path:
+Create a bucket, upload XML files to bucket root and finally upload all files 
+from a folder (including the subfolder structure) to a target path:
 
     <profile>
       <id>configureMinio</id>
