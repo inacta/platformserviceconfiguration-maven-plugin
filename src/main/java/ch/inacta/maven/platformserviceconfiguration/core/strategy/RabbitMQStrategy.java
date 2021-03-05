@@ -19,7 +19,6 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
 import ch.inacta.maven.platformserviceconfiguration.core.model.AccessTokenResponse;
-import ch.inacta.maven.platformserviceconfiguration.core.model.ErrorInfo;
 
 /**
  * Strategy to handle RabbitMQ specific configuration tasks.
@@ -84,8 +83,7 @@ class RabbitMQStrategy {
             this.plugin.getLog().info(format("Queue [%s] successfully created, status code: [%d]", this.plugin.getResource(), response.getStatus()));
         } else {
             this.plugin.getLog().warn(format("Error code: [%d]", response.getStatus()));
-            final ErrorInfo errorInfo = new ErrorInfo(response.getStatus(), response.getEntity().toString());
-            throw new MojoExecutionException(format("Unable to create queue: %s", errorInfo.toString()));
+            throw new MojoExecutionException(format("Unable to create queue: %s", response.getEntity().toString()));
         }
     }
 }

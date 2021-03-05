@@ -157,7 +157,7 @@ class KeycloakStrategy {
             try {
                 return JsonSerialization.readValue(is, type);
             } catch (final IOException e) {
-                throw new MojoExecutionException("Failed to parse json!");
+                throw new MojoExecutionException("Failed to parse JSON file!");
             }
         }
     }
