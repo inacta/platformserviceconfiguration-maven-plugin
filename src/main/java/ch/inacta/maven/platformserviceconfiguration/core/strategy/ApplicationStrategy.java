@@ -8,7 +8,7 @@ import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
  * Enum for different application configuration strategies.
  *
  * @author Inacta AG
- * @since 1.0.0
+ * @since 2.0.0
  */
 public enum ApplicationStrategy {
 

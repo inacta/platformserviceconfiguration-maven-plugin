@@ -5,9 +5,9 @@ RabbitMQ or MinIO via Maven. The supported features by now are:
 
 | Application  | Features |
 | ------------ |----------|
-| *KEYCLOAK*   | Creating <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li></ul> from JSON files|
-| *RABBITMQ*   | <ul><li>Creating a new queue</li></ul> |
-| *MINIO*      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
+| Keycloak   | Creating <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li></ul> from JSON files|
+| RabbitMQ   | <ul><li>Creating a new queue</li></ul> |
+| MinIO      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
 
 
 
@@ -36,7 +36,7 @@ Run from the command line: <br>
 
 ## Available goal
 
-* *configure*
+* `configure`
 
 
 ## Getting started
@@ -86,9 +86,9 @@ The *application* tag must specify which application should be configured:
     </configuration>
 
 Supported application strategies by now are:
-- *KEYCLOAK*
-- *RABBITMQ*
-- *MINIO*
+- `KEYCLOAK`
+- `RABBITMQ`
+- `MINIO`
 
 
 ### Set URL Endpoint
@@ -163,9 +163,9 @@ strategy:
 
 | Parameter  | Application | Explanation | Example |
 | -----------|-------------|-------------|---------|
-| *realms*   | KEYCLOAK    | Comma separated list of realms for which the *resource* shall be created.<br> Only mandatory for creating *clients* and *users*. | `<realms>realm1, realm2</realms>` |
-| *bucket*   | MINIO       | Specifies the bucket in the MinIO. | `<bucket>${bucket.name}</bucket>` |
-| *relative* | MINIO       | Uploads files with their relative folder structure to MinIO. <br> If not set to *true*, the files will be uploaded "flatten" to bucket root or *resource* path. | `<relative>true</relative>` |
+| *realms*   | *KEYCLOAK*  | Comma separated list of realms for which the *resource* shall be created.<br> Only mandatory for creating *clients* and *users*. | `<realms>realm1, realm2</realms>` |
+| *bucket*   | *MINIO*     | Specifies the bucket in the MinIO. | `<bucket>${bucket.name}</bucket>` |
+| *relative* | *MINIO*     | Uploads files with their relative folder structure to MinIO. <br> If not set to *true*, the files will be uploaded "flatten" to bucket root or *resource* path. | `<relative>true</relative>` |
 
 ## Example configurations
 

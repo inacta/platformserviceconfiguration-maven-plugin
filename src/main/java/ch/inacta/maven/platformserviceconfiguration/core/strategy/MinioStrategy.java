@@ -24,7 +24,7 @@ import io.minio.errors.MinioException;
  * Strategy to handle MinIO specific configuration tasks.
  *
  * @author Inacta AG
- * @since 1.0.0
+ * @since 2.0.0
  */
 class MinioStrategy {
 
