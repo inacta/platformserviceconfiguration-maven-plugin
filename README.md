@@ -13,6 +13,7 @@ RabbitMQ or MinIO via Maven. The supported features by now are:
 
 ## Table of Contents
 
+- [Building from source](#building-from-source)
 - [Available goal](#available-goal)
 - [Getting started](#getting-started)
 - [Configuration](#configuration)
@@ -27,6 +28,11 @@ RabbitMQ or MinIO via Maven. The supported features by now are:
     * [RabbitMQ](#rabbitmq)
     * [MinIO](#minio)
 
+
+## Building from source
+
+Run from the command line: <br>
+- `mvn clean install`
 
 ## Available goal
 
