@@ -72,9 +72,9 @@ class MinioStrategy {
         final boolean bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(this.bucket).build());
         if (!bucketExists) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(this.bucket).build());
-            this.plugin.getLog().info(format("Bucket created: [%s]", this.bucket));
+            this.plugin.getLog().info(format("- Bucket created: [%s]", this.bucket));
         } else {
-            this.plugin.getLog().info(format("Bucket [%s] already exists.", this.bucket));
+            this.plugin.getLog().info(format("- Bucket [%s] already exists.", this.bucket));
         }
     }
 
@@ -87,7 +87,7 @@ class MinioStrategy {
             minioClient
                     .uploadObject(UploadObjectArgs.builder().bucket(this.bucket).object(minioPath).filename(file.getKey().getAbsolutePath()).build());
 
-            this.plugin.getLog().info(format("File successfully uploaded: [%s]", minioPath));
+            this.plugin.getLog().info(format("- File successfully uploaded: [%s]", minioPath));
         }
     }
 

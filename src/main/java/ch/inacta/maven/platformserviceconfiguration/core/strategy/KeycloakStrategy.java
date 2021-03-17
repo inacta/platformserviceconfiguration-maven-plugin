@@ -1,5 +1,6 @@
 package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
+import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.join;
@@ -39,6 +40,8 @@ class KeycloakStrategy {
     private static final String ADMIN_CLI = "admin-cli";
     private final Plugin plugin;
     private final Log logger;
+    private final Keycloak keycloak;
+    private final KeycloakResource keycloakResource;
 
     /**
      * Default constructor.
@@ -46,36 +49,40 @@ class KeycloakStrategy {
      * @param plugin
      *            this plugin with all the called parameters
      */
-    KeycloakStrategy(final Plugin plugin) {
+    KeycloakStrategy(final Plugin plugin) throws MojoExecutionException {
 
         this.plugin = plugin;
         this.logger = plugin.getLog();
+        this.keycloakResource = KeycloakResource.fromString(this.plugin.getResource()).orElseThrow(
+                () -> new MojoExecutionException(format("Tag 'resource' must be one of the values: [%s]", join(KeycloakResource.values(), ", "))));
+        this.keycloak = initializeKeycloakClient();
     }
 
     /**
-     * Creates the configured Keycloak resource by processing all configured JSON files.
+     * Creates or deletes the configured Keycloak resource by processing all configured JSON files.
      */
-    void importFiles() throws MojoExecutionException {
-
-        final KeycloakResource keycloakResource = KeycloakResource.fromString(this.plugin.getResource()).orElseThrow(
-                () -> new MojoExecutionException(format("Tag 'resource' must be one of the values: [%s]", join(KeycloakResource.values(), ", "))));
-
-        final Keycloak keycloak = initializeKeycloakClient();
+    void processJSONFiles() throws MojoExecutionException {
 
         for (final File jsonFile : this.plugin.getFilesToProcess().keySet()) {
 
-            for (final String realm : keycloakResource.getRealms(this.plugin.getRealms())) {
+            for (final String realm : this.keycloakResource.getRealms(this.plugin.getRealms())) {
 
-                this.logger.info(format("Create %s %s with JSON [%s]", keycloakResource.toString(), realm.isBlank() ? "\b" : "for " + realm,
-                        jsonFile.getName()));
+                this.logger.info(format("- [%s] [%s] %s with JSON: [%s]", this.plugin.getMode(), this.keycloakResource.toString(),
+                        realm.isBlank() ? "\b" : "for realm [" + realm + "]", jsonFile.getName()));
+
                 try (final InputStream inputStream = new FileInputStream(jsonFile)) {
-                    keycloakResource.create(keycloak, realm, inputStream);
+
+                    if (this.plugin.getMode() == CREATE) {
+                        this.keycloakResource.create(this.keycloak, realm, inputStream);
+                    } else {
+                        this.keycloakResource.delete(this.keycloak, realm, inputStream);
+                    }
+
                 } catch (final IOException e) {
+
                     throw new MojoExecutionException(format("Failed to open: [%s]", jsonFile.getAbsolutePath()));
                 }
-
             }
-
         }
     }
 
@@ -103,6 +110,13 @@ class KeycloakStrategy {
                 // we just need one element, the realm name is irrelevant
                 return ImmutableList.of("");
             }
+
+            @Override
+            void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final RealmRepresentation representation = loadJSON(inputStream, RealmRepresentation.class);
+                keycloak.realm(representation.getRealm()).remove();
+            }
         },
         CLIENTS {
 
@@ -111,6 +125,14 @@ class KeycloakStrategy {
 
                 final ClientRepresentation representation = loadJSON(inputStream, ClientRepresentation.class);
                 keycloak.realm(realm).clients().create(representation);
+            }
+
+            @Override
+            void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final ClientRepresentation representation = loadJSON(inputStream, ClientRepresentation.class);
+                keycloak.realm(realm).clients().findByClientId(representation.getClientId())
+                        .forEach(client -> keycloak.realm(realm).clients().get(client.getId()).remove());
             }
         },
         USERS {
@@ -121,6 +143,14 @@ class KeycloakStrategy {
                 final UserRepresentation representation = loadJSON(inputStream, UserRepresentation.class);
                 keycloak.realm(realm).users().create(representation);
             }
+
+            @Override
+            void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final UserRepresentation representation = loadJSON(inputStream, UserRepresentation.class);
+                keycloak.realm(realm).users().search(representation.getUsername())
+                        .forEach(user -> keycloak.realm(realm).users().delete(user.getId()));
+            }
         },
         ROLES {
 
@@ -129,6 +159,13 @@ class KeycloakStrategy {
 
                 final RoleRepresentation representation = loadJSON(inputStream, RoleRepresentation.class);
                 keycloak.realm(realm).roles().create(representation);
+            }
+
+            @Override
+            void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final RoleRepresentation representation = loadJSON(inputStream, RoleRepresentation.class);
+                keycloak.realm(realm).roles().deleteRole(representation.getName());
             }
         };
 
@@ -143,6 +180,18 @@ class KeycloakStrategy {
          *            the JSON definition file of the Keycloak resource
          */
         abstract void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException;
+
+        /**
+         * Deletes the Keycloak resource with the Keycloak client.
+         *
+         * @param keycloak
+         *            the Keycloak client
+         * @param realm
+         *            the name of the realm for which the Keycloak resource has to be deleted
+         * @param inputStream
+         *            the JSON definition file of the Keycloak resource
+         */
+        abstract void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException;
 
         /**
          * Gets all realms from a comma separated {@code String} for which the Keycloak resource has to be created.

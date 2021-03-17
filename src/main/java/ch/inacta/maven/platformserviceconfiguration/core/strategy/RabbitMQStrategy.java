@@ -1,5 +1,6 @@
 package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
+import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Base64.getEncoder;
@@ -11,6 +12,7 @@ import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.USERNAME;
 
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 
@@ -44,24 +46,25 @@ class RabbitMQStrategy {
     }
 
     /**
-     * Simple REST call to create a queue.
+     * Simple REST call to create or delete a queue.
      */
-    void createQueue() throws MojoExecutionException {
+    void handleQueue() throws MojoExecutionException {
 
         if (this.plugin.getResource().isEmpty()) {
             throw new MojoExecutionException("Tag 'resource' has to be defined with the queue name!");
         }
 
-        final Response response = executeRequest(REST_ENDPOINT_FOR_CREATING_QUEUE + this.plugin.getResource());
+        final Response response = executeRequest();
         processResponse(response);
     }
 
-    private Response executeRequest(final String queueName) {
+    private Response executeRequest() {
 
         final AccessTokenResponse accessTokenResponse = getAccessTokenResponse();
-        return newClient().register(JacksonFeature.class).target(this.plugin.getEndpoint()).path(queueName)
-                .request(APPLICATION_JSON_TYPE, APPLICATION_JSON_TYPE)
-                .header(AUTHORIZATION, accessTokenResponse.getTokenType() + " " + accessTokenResponse.getAccessToken()).put(form(new Form()));
+        final Invocation.Builder builder = newClient().register(JacksonFeature.class).target(this.plugin.getEndpoint())
+                .path(REST_ENDPOINT_FOR_CREATING_QUEUE + this.plugin.getResource()).request(APPLICATION_JSON_TYPE, APPLICATION_JSON_TYPE)
+                .header(AUTHORIZATION, accessTokenResponse.getTokenType() + " " + accessTokenResponse.getAccessToken());
+        return this.plugin.getMode() == CREATE ? builder.put(form(new Form())) : builder.delete();
     }
 
     private AccessTokenResponse getAccessTokenResponse() {
@@ -80,10 +83,12 @@ class RabbitMQStrategy {
     private void processResponse(final Response response) throws MojoExecutionException {
 
         if (response.getStatusInfo().getFamily() == SUCCESSFUL) {
-            this.plugin.getLog().info(format("Queue [%s] successfully created, status code: [%d]", this.plugin.getResource(), response.getStatus()));
+            this.plugin.getLog().info(format("- [%s] queue [%s] was successful, status code: [%d]", this.plugin.getMode().name(),
+                    this.plugin.getResource(), response.getStatus()));
         } else {
-            this.plugin.getLog().warn(format("Error code: [%d]", response.getStatus()));
-            throw new MojoExecutionException(format("Unable to create queue: %s", response.getEntity().toString()));
+            this.plugin.getLog().warn(format("- [%s] queue [%s] was not successful, error code: [%d]", this.plugin.getMode().name(),
+                    this.plugin.getResource(), response.getStatus()));
+            throw new MojoExecutionException(format("Unable to %s queue [%s]", this.plugin.getMode().name(), this.plugin.getResource()));
         }
     }
 }

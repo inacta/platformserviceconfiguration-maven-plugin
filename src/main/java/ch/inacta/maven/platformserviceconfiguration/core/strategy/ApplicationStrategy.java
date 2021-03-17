@@ -1,5 +1,8 @@
 package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
+import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
+import static java.lang.String.format;
+
 import org.apache.maven.plugin.MojoExecutionException;
 
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
@@ -17,7 +20,7 @@ public enum ApplicationStrategy {
         @Override
         public void execute(final Plugin plugin) throws MojoExecutionException {
 
-            new KeycloakStrategy(plugin).importFiles();
+            new KeycloakStrategy(plugin).processJSONFiles();
         }
     },
     RABBITMQ {
@@ -25,7 +28,7 @@ public enum ApplicationStrategy {
         @Override
         public void execute(final Plugin plugin) throws MojoExecutionException {
 
-            new RabbitMQStrategy(plugin).createQueue();
+            new RabbitMQStrategy(plugin).handleQueue();
         }
     },
     MINIO {
@@ -33,7 +36,11 @@ public enum ApplicationStrategy {
         @Override
         public void execute(final Plugin plugin) throws MojoExecutionException {
 
-            new MinioStrategy(plugin).createBucketAndUploadFiles();
+            if (plugin.getMode() == CREATE) {
+                new MinioStrategy(plugin).createBucketAndUploadFiles();
+            } else {
+                throw new MojoExecutionException(format("Mode [%s] is not supported for MINIO application strategy", plugin.getMode()));
+            }
         }
     };
 
