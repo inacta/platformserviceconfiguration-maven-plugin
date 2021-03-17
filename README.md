@@ -5,7 +5,7 @@ RabbitMQ or MinIO via Maven. The supported features by now are:
 
 | Application  | Features |
 | ------------ |----------|
-| Keycloak   | Creating <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li></ul> from JSON files|
+| Keycloak   | Creating <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> from JSON files|
 | RabbitMQ   | <ul><li>Creating a new queue</li></ul> |
 | MinIO      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
 
@@ -154,7 +154,7 @@ strategy:
 
 | Application  | Meaning | Example |
 | ------------ |---------|---------|
-| *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li></ul> | `<resource>REALMS</resource>` |
+| *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> | `<resource>REALMS</resource>` |
 | *RABBITMQ*   | Specifies the queue which has to be created | `<resource>${virtual.host}/${queue}</resource>` |
 | *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
 

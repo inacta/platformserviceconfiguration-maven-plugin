@@ -20,6 +20,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.util.JsonSerialization;
 
@@ -119,6 +120,15 @@ class KeycloakStrategy {
 
                 final UserRepresentation representation = loadJSON(inputStream, UserRepresentation.class);
                 keycloak.realm(realm).users().create(representation);
+            }
+        },
+        ROLES {
+
+            @Override
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+
+                final RoleRepresentation representation = loadJSON(inputStream, RoleRepresentation.class);
+                keycloak.realm(realm).roles().create(representation);
             }
         };
 
