@@ -1,5 +1,6 @@
 package ch.inacta.maven.platformserviceconfiguration.core;
 
+import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Objects.requireNonNullElseGet;
@@ -21,6 +22,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import ch.inacta.maven.platformserviceconfiguration.core.strategy.ApplicationStrategy;
+import ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode;
 import ch.inacta.maven.platformserviceconfiguration.core.util.FileSetTransformer;
 
 /**
@@ -62,13 +64,15 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "relative")
     private boolean relative;
 
+    @Parameter(property = "mode")
+    private ResourceMode mode;
+
     @Override
     public void execute() throws MojoExecutionException {
 
         validateAuthorization();
 
-        getLog().info(format("Selected application strategy: [%s]", this.application));
-        getLog().info(format("Endpoint: [%s]", this.endpoint));
+        getLog().info(format("[%s] resources for application [%s] on endpoint [%s]", getMode(), this.application, getEndpoint()));
 
         this.application.execute(this);
     }
@@ -76,6 +80,8 @@ public class Plugin extends AbstractMojo {
     /**
      * Gets all files which have to be processed according to the configuration, including their relative path.
      *
+     * @throws MojoExecutionException
+     *             if execution fails
      * @return possible object is {@code Map<File, String>}
      */
     public Map<File, String> getFilesToProcess() throws MojoExecutionException {
@@ -156,6 +162,16 @@ public class Plugin extends AbstractMojo {
     public boolean isRelative() {
 
         return requireNonNullElse(this.relative, false);
+    }
+
+    /**
+     * Gets the value of the mode property.
+     *
+     * @return possible object is {@link ResourceMode}
+     */
+    public ResourceMode getMode() {
+
+        return requireNonNullElse(this.mode, CREATE);
     }
 
     private void validateAuthorization() throws MojoExecutionException {
