@@ -42,6 +42,14 @@ public enum ApplicationStrategy {
                 throw new MojoExecutionException(format("Mode [%s] is not supported for MINIO application strategy", plugin.getMode()));
             }
         }
+    },
+    POSTGRES {
+
+        @Override
+        public void execute(final Plugin plugin) throws MojoExecutionException {
+
+            new PostgresStrategy(plugin).handleDatabase();
+        }
     };
 
     /**

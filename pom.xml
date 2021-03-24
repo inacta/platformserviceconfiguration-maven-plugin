@@ -50,6 +50,8 @@
 
     <minio.client.version>8.1.0</minio.client.version>
 
+    <postgresql.version>42.2.19</postgresql.version>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
@@ -112,6 +114,11 @@
         <artifactId>keycloak-admin-client</artifactId>
         <version>${keycloak.admin.client.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -155,6 +162,10 @@
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-admin-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
     </dependency>
   </dependencies>
 
