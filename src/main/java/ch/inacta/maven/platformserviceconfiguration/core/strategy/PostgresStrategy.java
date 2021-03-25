@@ -57,8 +57,9 @@ public class PostgresStrategy {
         final String password = this.plugin.getAuthorization().get(PASSWORD);
 
         final String existsStatement = format("SELECT datname FROM pg_database WHERE datname = '%s'", this.plugin.getResource());
-        final String createStatement = format("CREATE DATABASE %s", this.plugin.getResource());
-        final String dropStatement = format("DROP DATABASE IF EXISTS %s", this.plugin.getResource());
+        final String createStatement = format("CREATE DATABASE \"%s\"", this.plugin.getResource()); // double quotes are necessary to handle names
+                                                                                                    // with hyphen '-'
+        final String dropStatement = format("DROP DATABASE IF EXISTS \"%s\"", this.plugin.getResource());
 
         loadDriver();
 
