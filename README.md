@@ -1,13 +1,14 @@
 # platformserviceconfiguration-maven-plugin
 
 This plugin is meant to provide an easy way to configure services like Keycloak, 
-RabbitMQ or MinIO via Maven. The supported features by now are:
+RabbitMQ, Postgres or MinIO via Maven. The supported features by now are:
 
 | Application  | Features |
 | ------------ |----------|
 | Keycloak   | Creating (or deleting)<br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> from JSON files|
 | RabbitMQ   | <ul><li>Creating (or deleting) queues</li></ul> |
 | MinIO      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
+| Postgres   | <ul><li>Creating (or deleting) databases</li></ul> |
 
 
 
@@ -28,6 +29,7 @@ RabbitMQ or MinIO via Maven. The supported features by now are:
     * [Keycloak](#keycloak)
     * [RabbitMQ](#rabbitmq)
     * [MinIO](#minio)
+    * [Postgres](#postgres)
 
 
 ## Building from source
@@ -90,6 +92,7 @@ Supported application strategies by now are:
 - `KEYCLOAK`
 - `RABBITMQ`
 - `MINIO`
+- `POSTGRES`
 
 
 ### Set URL Endpoint
@@ -158,6 +161,7 @@ strategy:
 | *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> | `<resource>REALMS</resource>` |
 | *RABBITMQ*   | Specifies the queue which has to be created | `<resource>${virtual.host}/${queue}</resource>` |
 | *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
+| *POSTGRES*   | Specifies the database which has to be created | `<resource>${database}</resource>` |
 
 
 ### Specify mode
@@ -354,6 +358,40 @@ from a folder (including the subfolder structure) to a target path:
                       <include>**/*</include>
                     </includes>
                   </fileSet>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+### Postgres
+
+Create a database:
+
+    <profile>
+      <id>configurePostgres</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>ch.inacta.maven</groupId>
+            <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>create-database</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+                <configuration>
+                  <application>POSTGRES</application>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/</endpoint>
+                  <resource>${postgres.database.name}</resource>
+                  <authorization>
+                    <username>${postgres.user.name}</username>
+                    <password>${postgres.user.password}</password>
+                  </authorization>
                 </configuration>
               </execution>
             </executions>
