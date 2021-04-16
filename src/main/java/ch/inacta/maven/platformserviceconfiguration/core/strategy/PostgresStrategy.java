@@ -2,7 +2,6 @@ package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.DELETE;
-import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.sql.DriverManager.getConnection;
 import static org.keycloak.OAuth2Constants.PASSWORD;
@@ -61,11 +60,8 @@ public class PostgresStrategy {
                                                                                                     // with hyphen '-'
         final String dropStatement = format("DROP DATABASE IF EXISTS \"%s\"", this.plugin.getResource());
 
-        loadDriver();
+        try (final Connection connection = getConnection(url, username, password); final Statement statement = connection.createStatement()) {
 
-        try (final Connection connection = getConnection(url, username, password)) {
-
-            final Statement statement = connection.createStatement();
             final ResultSet resultSet = statement.executeQuery(existsStatement);
             if (this.plugin.getMode() == CREATE && !resultSet.next()) {
                 statement.execute(createStatement);
@@ -75,15 +71,6 @@ public class PostgresStrategy {
 
         } catch (final SQLException e) {
             throw new MojoExecutionException(format("Failed to connect to database with url: %s", url), e);
-        }
-    }
-
-    private void loadDriver() throws MojoExecutionException {
-
-        try {
-            forName("org.postgresql.Driver");
-        } catch (final ClassNotFoundException e) {
-            throw new MojoExecutionException("Failed to load postgresql driver.", e);
         }
     }
 }
