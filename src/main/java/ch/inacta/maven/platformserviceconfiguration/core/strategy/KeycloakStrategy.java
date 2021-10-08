@@ -3,15 +3,17 @@ package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.USERNAME;
+import static org.keycloak.util.JsonSerialization.readValue;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,11 +21,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
 
 import com.google.common.collect.ImmutableList;
 
@@ -67,7 +69,7 @@ class KeycloakStrategy {
 
             for (final String realm : this.keycloakResource.getRealms(this.plugin.getRealms())) {
 
-                this.logger.info(format("- [%s] [%s] %s with JSON: [%s]", this.plugin.getMode(), this.keycloakResource.toString(),
+                this.logger.info(format("- %s [%s] %s with JSON: [%s]", this.plugin.getMode(), this.keycloakResource.toString(),
                         realm.isBlank() ? "\b" : "for realm [" + realm + "]", jsonFile.getName()));
 
                 try (final InputStream inputStream = new FileInputStream(jsonFile)) {
@@ -101,7 +103,12 @@ class KeycloakStrategy {
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 final RealmRepresentation representation = loadJSON(inputStream, RealmRepresentation.class);
-                keycloak.realms().create(representation);
+
+                final boolean isPresent = keycloak.realms().findAll().stream()
+                        .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(representation.getId()));
+                if (!isPresent) {
+                    keycloak.realms().create(representation);
+                }
             }
 
             @Override
@@ -115,7 +122,12 @@ class KeycloakStrategy {
             void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 final RealmRepresentation representation = loadJSON(inputStream, RealmRepresentation.class);
-                keycloak.realm(representation.getRealm()).remove();
+
+                final boolean isPresent = keycloak.realms().findAll().stream()
+                        .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(representation.getId()));
+                if (isPresent) {
+                    keycloak.realm(representation.getRealm()).remove();
+                }
             }
         },
         CLIENTS {
@@ -124,15 +136,25 @@ class KeycloakStrategy {
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 final ClientRepresentation representation = loadJSON(inputStream, ClientRepresentation.class);
-                keycloak.realm(realm).clients().create(representation);
+
+                final boolean isNotPresent = keycloak.realm(realm).clients().findByClientId(representation.getClientId()).isEmpty();
+                if (isNotPresent) {
+                    keycloak.realm(realm).clients().create(representation);
+                }
             }
 
             @Override
             void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 final ClientRepresentation representation = loadJSON(inputStream, ClientRepresentation.class);
-                keycloak.realm(realm).clients().findByClientId(representation.getClientId())
-                        .forEach(client -> keycloak.realm(realm).clients().get(client.getId()).remove());
+
+                final boolean isRealmPresent = keycloak.realms().findAll().stream()
+                        .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(realm));
+                final boolean isPresent = isRealmPresent && !keycloak.realm(realm).clients().findByClientId(representation.getClientId()).isEmpty();
+                if (isPresent) {
+                    keycloak.realm(realm).clients().findByClientId(representation.getClientId())
+                            .forEach(client -> keycloak.realm(realm).clients().get(client.getId()).remove());
+                }
             }
         },
         USERS {
@@ -142,14 +164,27 @@ class KeycloakStrategy {
 
                 final UserRepresentation representation = loadJSON(inputStream, UserRepresentation.class);
                 keycloak.realm(realm).users().create(representation);
+
+                final List<RoleRepresentation> rolesToAdd = new ArrayList<>();
+                representation.getRealmRoles().forEach(role -> rolesToAdd.add(keycloak.realm(realm).roles().get(role).toRepresentation()));
+
+                keycloak.realm(realm).users().search(representation.getUsername()).forEach(userRepresentation -> {
+                    final UserResource userResource = keycloak.realm(realm).users().get(userRepresentation.getId());
+                    userResource.roles().realmLevel().add(rolesToAdd);
+                });
             }
 
             @Override
             void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 final UserRepresentation representation = loadJSON(inputStream, UserRepresentation.class);
-                keycloak.realm(realm).users().search(representation.getUsername())
-                        .forEach(user -> keycloak.realm(realm).users().delete(user.getId()));
+
+                final boolean isRealmPresent = keycloak.realms().findAll().stream()
+                        .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(realm));
+                if (isRealmPresent) {
+                    keycloak.realm(realm).users().search(representation.getUsername())
+                            .forEach(user -> keycloak.realm(realm).users().delete(user.getId()));
+                }
             }
         },
         ROLES {
@@ -158,14 +193,26 @@ class KeycloakStrategy {
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 final RoleRepresentation representation = loadJSON(inputStream, RoleRepresentation.class);
-                keycloak.realm(realm).roles().create(representation);
+
+                final boolean isPresent = keycloak.realm(realm).roles().list().stream()
+                        .anyMatch(role -> role.getName().equals(representation.getName()));
+                if (!isPresent) {
+                    keycloak.realm(realm).roles().create(representation);
+                }
             }
 
             @Override
             void delete(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 final RoleRepresentation representation = loadJSON(inputStream, RoleRepresentation.class);
-                keycloak.realm(realm).roles().deleteRole(representation.getName());
+
+                final boolean isRealmPresent = keycloak.realms().findAll().stream()
+                        .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(realm));
+                final boolean isPresent = isRealmPresent
+                        && keycloak.realm(realm).roles().list().stream().anyMatch(role -> role.getName().equals(representation.getName()));
+                if (isPresent) {
+                    keycloak.realm(realm).roles().deleteRole(representation.getName());
+                }
             }
         };
 
@@ -207,14 +254,13 @@ class KeycloakStrategy {
 
         private static Optional<KeycloakResource> fromString(final String resource) {
 
-            return Arrays.stream(KeycloakResource.values()).filter(keycloakResource -> keycloakResource.toString().equalsIgnoreCase(resource))
-                    .findAny();
+            return stream(KeycloakResource.values()).filter(keycloakResource -> keycloakResource.toString().equalsIgnoreCase(resource)).findAny();
         }
 
         private static <T> T loadJSON(final InputStream is, final Class<T> type) throws MojoExecutionException {
 
             try {
-                return JsonSerialization.readValue(is, type);
+                return readValue(is, type);
             } catch (final IOException e) {
                 throw new MojoExecutionException("Failed to parse JSON file!");
             }
