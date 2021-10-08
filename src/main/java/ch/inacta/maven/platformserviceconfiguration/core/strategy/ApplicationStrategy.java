@@ -28,7 +28,7 @@ public enum ApplicationStrategy {
         @Override
         public void execute(final Plugin plugin) throws MojoExecutionException {
 
-            new RabbitMQStrategy(plugin).handleQueue();
+            new RabbitMQStrategy(plugin).invokeAPI();
         }
     },
     MINIO {
