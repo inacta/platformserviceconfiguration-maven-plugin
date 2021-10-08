@@ -67,6 +67,12 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "mode")
     private ResourceMode mode;
 
+    @Parameter(property = "resourceName")
+    private String resourceName;
+
+    @Parameter(property = "resourcePassword")
+    private String resourcePassword;
+
     @Override
     public void execute() throws MojoExecutionException {
 
@@ -172,6 +178,26 @@ public class Plugin extends AbstractMojo {
     public ResourceMode getMode() {
 
         return requireNonNullElse(this.mode, CREATE);
+    }
+
+    /**
+     * Gets the value of the resource name property.
+     *
+     * @return possible object is {@link String}
+     */
+    public String getResourceName() {
+
+        return requireNonNullElseGet(this.resourceName, String::new);
+    }
+
+    /**
+     * Gets the value of the resource password property.
+     *
+     * @return possible object is {@link String}
+     */
+    public String getResourcePassword() {
+
+        return requireNonNullElseGet(this.resourcePassword, String::new);
     }
 
     private void validateAuthorization() throws MojoExecutionException {
