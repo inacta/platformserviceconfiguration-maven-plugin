@@ -8,7 +8,7 @@ RabbitMQ, Postgres or MinIO via Maven. The supported features by now are:
 | Keycloak   | Creating (or deleting)<br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> from JSON files|
 | RabbitMQ   | <ul><li>Creating (or deleting) queues</li></ul> |
 | MinIO      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
-| Postgres   | <ul><li>Creating (or deleting) databases</li></ul> |
+| Postgres   | <ul><li>Creating (or deleting) databases</li><li>Creating (or deleting) users (with password)</li></ul> |
 
 
 
@@ -23,6 +23,8 @@ RabbitMQ, Postgres or MinIO via Maven. The supported features by now are:
     * [Add authorization credentials](#add-authorization-credentials)
     * [Add source directories](#add-source-directories)
     * [Specify resource](#specify-resource)
+    * [Specify resource name](#specify-resource-name)
+    * [Specify resource password](#specify-resource-password)
     * [Specify mode](#specify-mode)
     * [Add application specific parameters](#add-application-specific-parameters)
 - [Example configurations](#example-configurations)
@@ -153,16 +155,31 @@ in a *fileSets* list wrapper:
 
 ### Specify resource
 
-The *resource* tag has different meanings, depending on the application
-strategy:
+The *resource* tag has different meanings, depending on the application strategy:
 
 | Application  | Meaning | Example |
 | ------------ |---------|---------|
 | *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> | `<resource>REALMS</resource>` |
-| *RABBITMQ*   | Specifies the queue which has to be created | `<resource>${virtual.host}/${queue}</resource>` |
+| *RABBITMQ*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*QUEUE*</li></ul> | `<resource>QUEUE</resource>` |
 | *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
-| *POSTGRES*   | Specifies the database which has to be created | `<resource>${database}</resource>` |
+| *POSTGRES*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*DATABASE*</li><li>*USER*</li></ul> | `<resource>DATABASE</resource>` |
 
+### Specify resource name
+
+The *resourceName* tag specifies the name of the *resource* which shall be created:
+
+| Application  | Meaning | Example |
+| ------------ |---------|---------|
+| *RABBITMQ*   | Specifies the queue name which shall be created. | `<resourceName>${virtual.host}/${queue}</resourceName>` |
+| *POSTGRES*   | Specifies the database name or user name which shall be created. | `<resourceName>${databaseName}</resourceName>` |
+
+### Specify resource password
+
+The *resourcePassword* tag specifies the password of the *resource* which shall be created:
+
+| Application  | Meaning | Example |
+| ------------ |---------|---------|
+| *POSTGRES*   | Specifies the password of the user which shall be created. | `<resourcePassword>${databaseUserPassword}</resourcePassword>` |
 
 ### Specify mode
 
@@ -272,7 +289,8 @@ Create a queue:
                 <configuration>
                   <application>RABBITMQ</application>
                   <endpoint>${rabbitmq.host}:${rabbitmq.port}/</endpoint>
-                  <resource>${rabbitmq.virtual.host.name}/${rabbitmq.queue.name}</resource>
+                  <resource>queue</resource>
+                  <resourceName>${rabbitmq.virtual.host.name}/${rabbitmq.queue.name}</resourceName>
                   <authorization>
                     <username>${rabbitmq.user.name}</username>
                     <password>${rabbitmq.user.password}</password>
@@ -368,7 +386,7 @@ from a folder (including the subfolder structure) to a target path:
     
 ### Postgres
 
-Create a database:
+Create a user and a database:
 
     <profile>
       <id>configurePostgres</id>
@@ -379,6 +397,24 @@ Create a database:
             <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
             <executions>
               <execution>
+                <id>create-user</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+                <configuration>
+                  <application>POSTGRES</application>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/</endpoint>
+                  <resource>user</resource>
+                  <resourceName>${postgres.database.user.name}</resourceName>
+                  <resourcePassword>${postgres.database.user.password}</resourcePassword>
+                  <authorization>
+                    <username>${postgres.user.name}</username>
+                    <password>${postgres.user.password}</password>
+                  </authorization>
+                </configuration>
+              </execution>
+              <execution>
                 <id>create-database</id>
                 <phase>initialize</phase>
                 <goals>
@@ -387,7 +423,8 @@ Create a database:
                 <configuration>
                   <application>POSTGRES</application>
                   <endpoint>${postgres.jdbc.url}:${postgres.port}/</endpoint>
-                  <resource>${postgres.database.name}</resource>
+                  <resource>database</resource>
+                  <resourceName>${postgres.database.name}</resourceName>
                   <authorization>
                     <username>${postgres.user.name}</username>
                     <password>${postgres.user.password}</password>
