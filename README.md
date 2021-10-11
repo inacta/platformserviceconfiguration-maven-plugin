@@ -162,7 +162,7 @@ The *resource* tag has different meanings, depending on the application strategy
 | *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> | `<resource>REALMS</resource>` |
 | *RABBITMQ*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*QUEUE*</li></ul> | `<resource>QUEUE</resource>` |
 | *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
-| *POSTGRES*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*DATABASE*</li><li>*USER*</li><li>SCRIPTS</li></ul> | `<resource>DATABASE</resource>` |
+| *POSTGRES*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*DATABASE*</li><li>*USER*</li><li>*SCRIPTS*</li></ul> | `<resource>DATABASE</resource>` |
 
 ### Specify resource name
 
@@ -440,7 +440,7 @@ Create a user, a database and apply SQL scripts:
                 <configuration>
                   <application>POSTGRES</application>
                   <endpoint>${postgres.jdbc.url}:${postgres.port}/my_database</endpoint>
-                  <resource>SCRIPTS</resource>
+                  <resource>scripts</resource>
                   <fileSet>
                     <directory>${project.basedir}/scripts/my_database</directory>
                     <includes>
