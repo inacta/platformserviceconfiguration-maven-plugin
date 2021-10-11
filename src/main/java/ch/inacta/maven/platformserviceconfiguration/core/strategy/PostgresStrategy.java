@@ -3,12 +3,16 @@ package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.DELETE;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.DriverManager.getConnection;
 import static java.util.Arrays.stream;
+import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.USERNAME;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -56,7 +60,11 @@ public class PostgresStrategy {
 
         try (final Connection connection = getConnection(url, username, password); final Statement statement = connection.createStatement()) {
 
-            execute(statement);
+            if (this.databaseResource == DatabaseResource.SCRIPTS) {
+                applyScripts(statement);
+            } else {
+                createOrDeleteDatabaseResource(statement);
+            }
 
         } catch (final SQLException e) {
 
@@ -64,7 +72,7 @@ public class PostgresStrategy {
         }
     }
 
-    private void execute(final Statement statement) throws MojoExecutionException {
+    private void createOrDeleteDatabaseResource(final Statement statement) throws MojoExecutionException {
 
         try {
 
@@ -77,6 +85,20 @@ public class PostgresStrategy {
         } catch (final SQLException e) {
 
             throw new MojoExecutionException("Failed to execute statement", e);
+        }
+    }
+
+    private void applyScripts(final Statement statement) throws MojoExecutionException {
+
+        for (final File file : this.plugin.getFilesToProcess().keySet()) {
+            try {
+
+                statement.execute(readFileToString(file, UTF_8));
+
+            } catch (final SQLException | IOException e) {
+
+                throw new MojoExecutionException(format("Failed to apply SQL script: [%s]", file.getName()), e);
+            }
         }
     }
 
@@ -120,6 +142,26 @@ public class PostgresStrategy {
             String delete(final String name) {
 
                 return format("DROP USER IF EXISTS \"%s\"", name); // double quotes are necessary to handle names with hyphen '-'
+            }
+        },
+        SCRIPTS {
+
+            @Override
+            String exists(final String name) {
+
+                return "NULL";
+            }
+
+            @Override
+            String create(final String name, final String password) {
+
+                return "NULL";
+            }
+
+            @Override
+            String delete(final String name) {
+
+                return "NULL";
             }
         };
 

@@ -8,7 +8,7 @@ RabbitMQ, Postgres or MinIO via Maven. The supported features by now are:
 | Keycloak   | Creating (or deleting)<br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> from JSON files|
 | RabbitMQ   | <ul><li>Creating (or deleting) queues</li></ul> |
 | MinIO      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
-| Postgres   | <ul><li>Creating (or deleting) databases</li><li>Creating (or deleting) users (with password)</li></ul> |
+| Postgres   | <ul><li>Creating (or deleting) databases</li><li>Creating (or deleting) users (with password)</li><li>Apply SQL scripts</li></ul> |
 
 
 
@@ -162,7 +162,7 @@ The *resource* tag has different meanings, depending on the application strategy
 | *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> | `<resource>REALMS</resource>` |
 | *RABBITMQ*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*QUEUE*</li></ul> | `<resource>QUEUE</resource>` |
 | *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
-| *POSTGRES*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*DATABASE*</li><li>*USER*</li></ul> | `<resource>DATABASE</resource>` |
+| *POSTGRES*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*DATABASE*</li><li>*USER*</li><li>SCRIPTS</li></ul> | `<resource>DATABASE</resource>` |
 
 ### Specify resource name
 
@@ -386,7 +386,7 @@ from a folder (including the subfolder structure) to a target path:
     
 ### Postgres
 
-Create a user and a database:
+Create a user, a database and apply SQL scripts:
 
     <profile>
       <id>configurePostgres</id>
@@ -404,13 +404,13 @@ Create a user and a database:
                 </goals>
                 <configuration>
                   <application>POSTGRES</application>
-                  <endpoint>${postgres.jdbc.url}:${postgres.port}/</endpoint>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/${postgres.defaultDatabase}</endpoint>
                   <resource>user</resource>
                   <resourceName>${postgres.database.user.name}</resourceName>
                   <resourcePassword>${postgres.database.user.password}</resourcePassword>
                   <authorization>
-                    <username>${postgres.user.name}</username>
-                    <password>${postgres.user.password}</password>
+                    <username>${postgres.admin.name}</username>
+                    <password>${postgres.admin.password}</password>
                   </authorization>
                 </configuration>
               </execution>
@@ -422,12 +422,34 @@ Create a user and a database:
                 </goals>
                 <configuration>
                   <application>POSTGRES</application>
-                  <endpoint>${postgres.jdbc.url}:${postgres.port}/</endpoint>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/${postgres.defaultDatabase}</endpoint>
                   <resource>database</resource>
                   <resourceName>${postgres.database.name}</resourceName>
                   <authorization>
-                    <username>${postgres.user.name}</username>
-                    <password>${postgres.user.password}</password>
+                    <username>${postgres.admin.name}</username>
+                    <password>${postgres.admin.password}</password>
+                  </authorization>
+                </configuration>
+              </execution>
+              <execution>
+                <id>apply-scripts</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+                <configuration>
+                  <application>POSTGRES</application>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/my_database</endpoint>
+                  <resource>SCRIPTS</resource>
+                  <fileSet>
+                    <directory>${project.basedir}/scripts/my_database</directory>
+                    <includes>
+                      <include>**/*.sql</include>
+                    </includes>
+                  </fileSet>
+                  <authorization>
+                    <username>${postgres.admin.name}</username>
+                    <password>${postgres.admin.password}</password>
                   </authorization>
                 </configuration>
               </execution>
