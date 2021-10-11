@@ -56,18 +56,27 @@ public class PostgresStrategy {
 
         try (final Connection connection = getConnection(url, username, password); final Statement statement = connection.createStatement()) {
 
+            execute(statement);
+
+        } catch (final SQLException e) {
+
+            throw new MojoExecutionException(format("Failed to connect to database with url: [%s]", url), e);
+        }
+    }
+
+    private void execute(final Statement statement) throws MojoExecutionException {
+
+        try {
+
             if (this.plugin.getMode() == CREATE && !statement.executeQuery(this.databaseResource.exists(this.plugin.getResourceName())).next()) {
-
                 statement.execute(this.databaseResource.create(this.plugin.getResourceName(), this.plugin.getResourcePassword()));
-
             } else if (this.plugin.getMode() == DELETE) {
-
                 statement.execute(this.databaseResource.delete(this.plugin.getResourceName()));
-
             }
 
         } catch (final SQLException e) {
-            throw new MojoExecutionException(format("Failed to connect to database with url: [%s]", url), e);
+
+            throw new MojoExecutionException("Failed to execute statement", e);
         }
     }
 
