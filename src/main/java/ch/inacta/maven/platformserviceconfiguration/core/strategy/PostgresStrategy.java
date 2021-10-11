@@ -55,9 +55,6 @@ public class PostgresStrategy {
         final String username = this.plugin.getAuthorization().get(USERNAME);
         final String password = this.plugin.getAuthorization().get(PASSWORD);
 
-        this.plugin.getLog()
-                .info(format("- %s [%s] with name: [%s]", this.plugin.getMode(), this.databaseResource.toString(), this.plugin.getResourceName()));
-
         try (final Connection connection = getConnection(url, username, password); final Statement statement = connection.createStatement()) {
 
             if (this.databaseResource == DatabaseResource.SCRIPTS) {
@@ -73,6 +70,8 @@ public class PostgresStrategy {
     }
 
     private void createOrDeleteDatabaseResource(final Statement statement) throws MojoExecutionException {
+
+        this.plugin.getLog().info(format("- %s [%s] with name: [%s]", this.plugin.getMode(), this.databaseResource.toString(), this.plugin.getResourceName()));
 
         try {
 
@@ -93,6 +92,7 @@ public class PostgresStrategy {
         for (final File file : this.plugin.getFilesToProcess().keySet()) {
             try {
 
+                this.plugin.getLog().info(format("- Apply script with name: [%s]", file.getName()));
                 statement.execute(readFileToString(file, UTF_8));
 
             } catch (final SQLException | IOException e) {
