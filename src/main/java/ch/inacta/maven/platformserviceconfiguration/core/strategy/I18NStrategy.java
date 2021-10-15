@@ -112,7 +112,7 @@ class I18NStrategy {
                             + "',"
                             + (language == null ? "null" : "'" + language + "'")
                             + ",'"
-                            + getType(file)
+                            + getFileNameWithoutExtension(file)
                             + "'"
                             + ");";
 
@@ -131,7 +131,7 @@ class I18NStrategy {
                         + "' and language "
                         + (language == null ? "is null" : "= '" + language + "'")
                         + " and type = '"
-                        + getType(file)
+                        + getFileNameWithoutExtension(file)
                         + "';";
             }
 
@@ -139,6 +139,58 @@ class I18NStrategy {
             String delete(final String id) {
 
                 return "DELETE FROM selection_list WHERE id = '" + id + "'";
+            }
+        },
+        TEMPLATE {
+
+            @Override
+            String exists(final File file) {
+
+                final String language = getLanguage(file);
+                return "SELECT id FROM template WHERE discriminator = '"
+                        + getDiscriminator(file)
+                        + "' and language "
+                        + (language == null ? "is null" : "= '" + language + "'")
+                        + " and key = '"
+                        + getFileNameWithoutExtension(file)
+                        + "';";
+            }
+
+            @Override
+            String insert(final File file) throws MojoExecutionException {
+
+                try {
+
+                    final String language = getLanguage(file);
+                    return "INSERT INTO template(id, created, created_by, discriminator, last_modified, modified_by, key, language, template) VALUES("
+                            + "md5(random()::text || clock_timestamp()::text)::uuid,"
+                            + "current_timestamp,"
+                            + "'platformserviceconfiguration-maven-plugin',"
+                            + "'"
+                            + getDiscriminator(file)
+                            + "',"
+                            + "current_timestamp,"
+                            + "'platformserviceconfiguration-maven-plugin',"
+                            + "'"
+                            + getFileNameWithoutExtension(file)
+                            + "',"
+                            + (language == null ? "null" : "'" + language + "'")
+                            + ","
+                            + "decode('"
+                            + readFileToString(file, UTF_8).replace("'", "''")
+                            + "', 'escape')"
+                            + ");";
+
+                } catch (final IOException e) {
+
+                    throw new MojoExecutionException(format("Failed to open file: [%s]", file.getName()), e);
+                }
+            }
+
+            @Override
+            String delete(final String id) {
+
+                return "DELETE FROM template WHERE id = '" + id + "'";
             }
         };
 
@@ -191,7 +243,7 @@ class I18NStrategy {
             return file.getName().substring(underscore + 1, file.getName().indexOf("."));
         }
 
-        private static String getType(final File file) {
+        private static String getFileNameWithoutExtension(final File file) {
 
             final int underscore = file.getName().indexOf("_");
             return file.getName().substring(0, underscore == -1 ? file.getName().indexOf(".") : underscore);
