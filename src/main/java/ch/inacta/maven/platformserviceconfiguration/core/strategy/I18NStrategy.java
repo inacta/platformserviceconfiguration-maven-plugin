@@ -29,6 +29,10 @@ import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
  */
 class I18NStrategy {
 
+    private static final String CREATED_AND_MODIFIED_BY = "platformserviceconfiguration-maven-plugin";
+    private static final String CURRENT_TIMESTAMP = "current_timestamp";
+    private static final String GENERATE_UUID = "md5(random()::text || clock_timestamp()::text)::uuid";
+
     private final Plugin plugin;
     private final I18NResource i18NResource;
 
@@ -69,7 +73,7 @@ class I18NStrategy {
     private void processFile(final Statement statement, final File file) throws MojoExecutionException {
 
         this.plugin.getLog()
-                .info(format("- Generate [%s] SQL for table [%s] with file: [%s]", this.plugin.getMode(), this.i18NResource, file.getName()));
+                .info(format("- Generate [%s] SQL for resource [%s] with file: [%s]", this.plugin.getMode(), this.i18NResource, file.getName()));
 
         try {
 
@@ -77,7 +81,7 @@ class I18NStrategy {
             if (resultSet.next()) {
 
                 final String id = resultSet.getString("id");
-                this.plugin.getLog().info(format("- Entity already exists, going to delete it first with id: [%s]", id));
+                this.plugin.getLog().info(format("-- Entity already exists, entity with id [%s] will be replaced", id));
                 statement.execute(this.i18NResource.delete(id));
             }
             statement.execute(this.i18NResource.insert(file));
@@ -85,6 +89,10 @@ class I18NStrategy {
         } catch (final SQLException e) {
 
             throw new MojoExecutionException(format("Failed to apply SQL for file: [%s]", file.getName()), e);
+
+        } catch (final IOException e) {
+
+            throw new MojoExecutionException(format("Failed to open file: [%s]", file.getName()), e);
         }
     }
 
@@ -93,43 +101,40 @@ class I18NStrategy {
         SELECTION_LIST {
 
             @Override
-            String insert(final File file) throws MojoExecutionException {
+            String insert(final File file) throws IOException {
 
-                try {
-
-                    final String language = getLanguage(file);
-                    return "INSERT INTO selection_list(id, created, created_by, discriminator, last_modified, modified_by, config, language, type) VALUES("
-                            + "md5(random()::text || clock_timestamp()::text)::uuid,"
-                            + "current_timestamp,"
-                            + "'platformserviceconfiguration-maven-plugin',"
-                            + "'"
-                            + getDiscriminator(file)
-                            + "',"
-                            + "current_timestamp,"
-                            + "'platformserviceconfiguration-maven-plugin',"
-                            + "'"
-                            + readFileToString(file, UTF_8).replace("'", "''")
-                            + "',"
-                            + (language == null ? "null" : "'" + language + "'")
-                            + ",'"
-                            + getFileNameWithoutExtension(file)
-                            + "'"
-                            + ");";
-
-                } catch (final IOException e) {
-
-                    throw new MojoExecutionException(format("Failed to open file: [%s]", file.getName()), e);
-                }
+                final String language = getLanguage(file);
+                return "INSERT INTO selection_list(id, created, created_by, discriminator, last_modified, modified_by, config, language, type) VALUES("
+                        + GENERATE_UUID
+                        + ","
+                        + CURRENT_TIMESTAMP
+                        + ",'"
+                        + CREATED_AND_MODIFIED_BY
+                        + "',"
+                        + "'"
+                        + getDiscriminator(file)
+                        + "',"
+                        + CURRENT_TIMESTAMP
+                        + ",'"
+                        + CREATED_AND_MODIFIED_BY
+                        + "',"
+                        + "'"
+                        + readFileToString(file, UTF_8).replace("'", "''")
+                        + "',"
+                        + (language == null ? "null" : "'" + language + "'")
+                        + ",'"
+                        + getFileNameWithoutExtension(file)
+                        + "'"
+                        + ");";
             }
 
             @Override
             String exists(final File file) {
 
-                final String language = getLanguage(file);
                 return "SELECT id FROM selection_list WHERE discriminator = '"
                         + getDiscriminator(file)
-                        + "' and language "
-                        + (language == null ? "is null" : "= '" + language + "'")
+                        + "'"
+                        + addLanguageExpression(file)
                         + " and type = '"
                         + getFileNameWithoutExtension(file)
                         + "';";
@@ -146,51 +151,88 @@ class I18NStrategy {
             @Override
             String exists(final File file) {
 
-                final String language = getLanguage(file);
                 return "SELECT id FROM template WHERE discriminator = '"
                         + getDiscriminator(file)
-                        + "' and language "
-                        + (language == null ? "is null" : "= '" + language + "'")
+                        + "'"
+                        + addLanguageExpression(file)
                         + " and key = '"
                         + getFileNameWithoutExtension(file)
                         + "';";
             }
 
             @Override
-            String insert(final File file) throws MojoExecutionException {
+            String insert(final File file) throws IOException {
 
-                try {
-
-                    final String language = getLanguage(file);
-                    return "INSERT INTO template(id, created, created_by, discriminator, last_modified, modified_by, key, language, template) VALUES("
-                            + "md5(random()::text || clock_timestamp()::text)::uuid,"
-                            + "current_timestamp,"
-                            + "'platformserviceconfiguration-maven-plugin',"
-                            + "'"
-                            + getDiscriminator(file)
-                            + "',"
-                            + "current_timestamp,"
-                            + "'platformserviceconfiguration-maven-plugin',"
-                            + "'"
-                            + getFileNameWithoutExtension(file)
-                            + "',"
-                            + (language == null ? "null" : "'" + language + "'")
-                            + ","
-                            + "decode('"
-                            + readFileToString(file, UTF_8).replace("'", "''")
-                            + "', 'escape')"
-                            + ");";
-
-                } catch (final IOException e) {
-
-                    throw new MojoExecutionException(format("Failed to open file: [%s]", file.getName()), e);
-                }
+                final String language = getLanguage(file);
+                return "INSERT INTO template(id, created, created_by, discriminator, last_modified, modified_by, key, language, template) VALUES("
+                        + GENERATE_UUID
+                        + ","
+                        + CURRENT_TIMESTAMP
+                        + ",'"
+                        + CREATED_AND_MODIFIED_BY
+                        + "',"
+                        + "'"
+                        + getDiscriminator(file)
+                        + "',"
+                        + CURRENT_TIMESTAMP
+                        + ",'"
+                        + CREATED_AND_MODIFIED_BY
+                        + "',"
+                        + "'"
+                        + getFileNameWithoutExtension(file)
+                        + "',"
+                        + (language == null ? "null" : "'" + language + "'")
+                        + ","
+                        + "decode('"
+                        + readFileToString(file, UTF_8).replace("'", "''")
+                        + "', 'escape')"
+                        + ");";
             }
 
             @Override
             String delete(final String id) {
 
                 return "DELETE FROM template WHERE id = '" + id + "'";
+            }
+        },
+        LABEL {
+
+            @Override
+            String exists(final File file) {
+
+                return "SELECT id FROM i18n WHERE discriminator = '" + getDiscriminator(file) + "'" + addLanguageExpression(file) + ";";
+            }
+
+            @Override
+            String insert(final File file) throws IOException {
+
+                final String language = getLanguage(file);
+                return "INSERT INTO i18n(id, created, created_by, discriminator, last_modified, modified_by, language, translation) VALUES("
+                        + GENERATE_UUID
+                        + ","
+                        + CURRENT_TIMESTAMP
+                        + ",'"
+                        + CREATED_AND_MODIFIED_BY
+                        + "',"
+                        + "'"
+                        + getDiscriminator(file)
+                        + "',"
+                        + CURRENT_TIMESTAMP
+                        + ",'"
+                        + CREATED_AND_MODIFIED_BY
+                        + "',"
+                        + (language == null ? "null" : "'" + language + "'")
+                        + ","
+                        + "decode('"
+                        + readFileToString(file, UTF_8).replace("'", "''")
+                        + "', 'escape')"
+                        + ");";
+            }
+
+            @Override
+            String delete(final String id) {
+
+                return "DELETE FROM i18n WHERE id = '" + id + "'";
             }
         };
 
@@ -210,7 +252,7 @@ class I18NStrategy {
          *            the file with the content of the resource
          * @return insert statement
          */
-        abstract String insert(final File file) throws MojoExecutionException;
+        abstract String insert(final File file) throws IOException;
 
         /**
          * Deletes the specified resource.
@@ -247,6 +289,12 @@ class I18NStrategy {
 
             final int underscore = file.getName().indexOf("_");
             return file.getName().substring(0, underscore == -1 ? file.getName().indexOf(".") : underscore);
+        }
+
+        private static String addLanguageExpression(final File file) {
+
+            final String language = getLanguage(file);
+            return " and language " + (language == null ? "is null" : "= '" + language + "'");
         }
     }
 }
