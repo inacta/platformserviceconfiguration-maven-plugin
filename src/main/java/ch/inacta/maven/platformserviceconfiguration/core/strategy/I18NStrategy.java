@@ -99,7 +99,7 @@ class I18NStrategy {
 
                     final String language = getLanguage(file);
                     return "INSERT INTO selection_list(id, created, created_by, discriminator, last_modified, modified_by, config, language, type) VALUES("
-                            + "md5(random()::text || clock_timestamp()::text)::cstring,"
+                            + "md5(random()::text || clock_timestamp()::text)::uuid,"
                             + "current_timestamp,"
                             + "'platformserviceconfiguration-maven-plugin',"
                             + "'"
