@@ -1,5 +1,6 @@
 package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
+import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.DriverManager.getConnection;
@@ -72,19 +73,22 @@ class I18NStrategy {
 
     private void processFile(final Statement statement, final File file) throws MojoExecutionException {
 
-        this.plugin.getLog()
-                .info(format("- Generate [%s] SQL for resource [%s] with file: [%s]", this.plugin.getMode(), this.i18NResource, file.getName()));
+        this.plugin.getLog().info(format("- Generate SQL for [%s] with [%s] (discriminator: [%s], language: [%s])", this.i18NResource, file.getName(),
+                getDiscriminator(file), getLanguage(file)));
 
         try {
 
             final ResultSet resultSet = statement.executeQuery(this.i18NResource.exists(file));
             if (resultSet.next()) {
-
                 final String id = resultSet.getString("id");
-                this.plugin.getLog().info(format("-- Entity already exists, entity with id [%s] will be replaced", id));
+                this.plugin.getLog().info(format("-- %s with id [%s] found, will be %s", this.i18NResource, id,
+                        this.plugin.getMode() == CREATE ? "replaced" : "deleted"));
                 statement.execute(this.i18NResource.delete(id));
             }
-            statement.execute(this.i18NResource.insert(file));
+
+            if (this.plugin.getMode() == CREATE) {
+                statement.execute(this.i18NResource.insert(file));
+            }
 
         } catch (final SQLException e) {
 
@@ -94,6 +98,29 @@ class I18NStrategy {
 
             throw new MojoExecutionException(format("Failed to open file: [%s]", file.getName()), e);
         }
+    }
+
+    private static String getDiscriminator(final File file) {
+
+        final int fileNameIndex = file.getPath().indexOf(file.getName());
+        final String separator = file.getPath().substring(fileNameIndex - 1, fileNameIndex);
+        final String pathWithoutFileName = file.getPath().substring(0, fileNameIndex - 1);
+        return pathWithoutFileName.substring(pathWithoutFileName.lastIndexOf(separator) + 1);
+    }
+
+    private static String getLanguage(final File file) {
+
+        final int underscoreIndex = file.getName().indexOf("_");
+        if (underscoreIndex == -1) {
+            return null;
+        }
+        return file.getName().substring(underscoreIndex + 1, file.getName().indexOf("."));
+    }
+
+    private static String getFileNameWithoutExtension(final File file) {
+
+        final int underscoreIndex = file.getName().indexOf("_");
+        return file.getName().substring(0, underscoreIndex == -1 ? file.getName().indexOf(".") : underscoreIndex);
     }
 
     private enum I18NResource {
@@ -266,29 +293,6 @@ class I18NStrategy {
         private static Optional<I18NResource> fromString(final String resource) {
 
             return stream(I18NResource.values()).filter(i18NResource -> i18NResource.toString().equalsIgnoreCase(resource)).findAny();
-        }
-
-        private static String getDiscriminator(final File file) {
-
-            final int indexOfFileName = file.getPath().indexOf(file.getName());
-            final String separator = file.getPath().substring(indexOfFileName - 1, indexOfFileName);
-            final String pathWithoutFileName = file.getPath().substring(0, indexOfFileName - 1);
-            return pathWithoutFileName.substring(pathWithoutFileName.lastIndexOf(separator) + 1);
-        }
-
-        private static String getLanguage(final File file) {
-
-            final int underscore = file.getName().indexOf("_");
-            if (underscore == -1) {
-                return null;
-            }
-            return file.getName().substring(underscore + 1, file.getName().indexOf("."));
-        }
-
-        private static String getFileNameWithoutExtension(final File file) {
-
-            final int underscore = file.getName().indexOf("_");
-            return file.getName().substring(0, underscore == -1 ? file.getName().indexOf(".") : underscore);
         }
 
         private static String addLanguageExpression(final File file) {
