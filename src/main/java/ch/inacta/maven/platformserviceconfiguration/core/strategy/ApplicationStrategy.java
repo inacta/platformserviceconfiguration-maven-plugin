@@ -50,6 +50,14 @@ public enum ApplicationStrategy {
 
             new PostgresStrategy(plugin).executeDatabaseStatements();
         }
+    },
+    I18N {
+
+        @Override
+        public void execute(final Plugin plugin) throws MojoExecutionException {
+
+            new I18NStrategy(plugin).createAndExecuteSQLStatement();
+        }
     };
 
     /**
