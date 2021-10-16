@@ -9,6 +9,7 @@ RabbitMQ, Postgres or MinIO via Maven. The supported features by now are:
 | RabbitMQ   | <ul><li>Creating (or deleting) queues</li></ul> |
 | MinIO      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
 | Postgres   | <ul><li>Creating (or deleting) databases</li><li>Creating (or deleting) users (with password)</li><li>Apply SQL scripts</li></ul> |
+| I18N       | Creating (or deleting) i18n entries for<br> <ul><li>*SELECTION_LIST*</li><li>*TEMPLATE*</li><li>*LABEL*</li></ul> |
 
 
 
@@ -32,6 +33,7 @@ RabbitMQ, Postgres or MinIO via Maven. The supported features by now are:
     * [RabbitMQ](#rabbitmq)
     * [MinIO](#minio)
     * [Postgres](#postgres)
+    * [I18N](#i18n)
 
 
 ## Building from source
@@ -95,6 +97,7 @@ Supported application strategies by now are:
 - `RABBITMQ`
 - `MINIO`
 - `POSTGRES`
+- `I18N`
 
 
 ### Set URL Endpoint
@@ -163,6 +166,7 @@ The *resource* tag has different meanings, depending on the application strategy
 | *RABBITMQ*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*QUEUE*</li></ul> | `<resource>QUEUE</resource>` |
 | *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
 | *POSTGRES*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*DATABASE*</li><li>*USER*</li><li>*SCRIPTS*</li></ul> | `<resource>DATABASE</resource>` |
+| *I18N*       | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*SELECTION_LIST*</li><li>*TEMPLATE*</li><li>*LABEL*</li></ul> | `<resource>TEMPLATE</resource>` |
 
 ### Specify resource name
 
@@ -451,6 +455,99 @@ Create a user, a database and apply SQL scripts:
                     <username>${postgres.admin.name}</username>
                     <password>${postgres.admin.password}</password>
                   </authorization>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+### I18N
+
+Create an i18n entry for a selection list, a template and labels
+
+    <profile>
+      <id>configureI18N</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>ch.inacta.maven</groupId>
+            <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>selection_list</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+                <configuration>
+                  <application>I18N</application>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/my_database_with_i18n_tables</endpoint>
+                  <mode>CREATE</mode>
+                  <resource>selection_list</resource>
+                  <authorization>
+                    <username>${postgres.admin.name}</username>
+                    <password>${postgres.admin.password}</password>
+                  </authorization>
+                  <fileSets>
+                    <fileSet>
+                      <directory>${project.basedir}/script/database/selectionlists</directory>
+                      <includes>
+                        <include>**/*.json</include>
+                      </includes>
+                    </fileSet>
+                  </fileSets>
+                </configuration>
+              </execution>
+              <execution>
+                <id>template</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+                <configuration>
+                  <application>I18N</application>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/my_database_with_i18n_tables</endpoint>
+                  <mode>CREATE</mode>
+                  <resource>template</resource>
+                  <authorization>
+                    <username>${postgres.admin.name}</username>
+                    <password>${postgres.admin.password}</password>
+                  </authorization>
+                  <fileSets>
+                    <fileSet>
+                      <directory>${project.basedir}/script/database/templates</directory>
+                      <includes>
+                        <include>**/*.html</include>
+                      </includes>
+                    </fileSet>
+                  </fileSets>
+                </configuration>
+              </execution>
+              <execution>
+                <id>labels</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+                <configuration>
+                  <application>I18N</application>
+                  <endpoint>${postgres.jdbc.url}:${postgres.port}/my_database_with_i18n_tables</endpoint>
+                  <mode>CREATE</mode>
+                  <resource>label</resource>
+                  <authorization>
+                    <username>${postgres.admin.name}</username>
+                    <password>${postgres.admin.password}</password>
+                  </authorization>
+                  <fileSets>
+                    <fileSet>
+                      <directory>${project.basedir}/script/database/labels</directory>
+                      <includes>
+                        <include>**/*.properties</include>
+                      </includes>
+                    </fileSet>
+                  </fileSets>
                 </configuration>
               </execution>
             </executions>
