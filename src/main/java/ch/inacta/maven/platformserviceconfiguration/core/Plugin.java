@@ -73,6 +73,9 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "resourcePassword")
     private String resourcePassword;
 
+    @Parameter(property = "durable")
+    private boolean durable;
+
     @Override
     public void execute() throws MojoExecutionException {
 
@@ -198,6 +201,16 @@ public class Plugin extends AbstractMojo {
     public String getResourcePassword() {
 
         return requireNonNullElseGet(this.resourcePassword, String::new);
+    }
+
+    /**
+     * Gets the value of the durable property
+     * 
+     * @return possible value is of type boolean
+     */
+    public boolean getDurable() {
+
+        return this.durable;
     }
 
     private void validateAuthorization() throws MojoExecutionException {

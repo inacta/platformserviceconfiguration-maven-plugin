@@ -66,7 +66,7 @@ class RabbitMQStrategy {
         final Invocation.Builder builder = newClient().register(JacksonFeature.class).target(this.plugin.getEndpoint())
                 .path(this.resource.getPath() + this.plugin.getResourceName()).request(APPLICATION_JSON_TYPE)
                 .header(AUTHORIZATION, accessTokenResponse.getTokenType() + " " + accessTokenResponse.getAccessToken());
-        return this.plugin.getMode() == CREATE ? builder.put(this.resource.getEntity()) : builder.delete();
+        return this.plugin.getMode() == CREATE ? builder.put(this.resource.getEntity(this.plugin.getDurable())) : builder.delete();
     }
 
     private AccessTokenResponse getAccessTokenResponse() {
@@ -106,9 +106,24 @@ class RabbitMQStrategy {
             }
 
             @Override
-            Entity<String> getEntity() {
+            Entity<String> getEntity(final boolean durable) {
 
-                return json("{}");
+                return json(format("{\"durable\":%s,\"arguments\":{\"x-queue-type\":\"classic\"}}", durable));
+            }
+        },
+
+        TOPIC {
+
+            @Override
+            String getPath() {
+
+                return "api/exchanges/";
+            }
+
+            @Override
+            Entity<String> getEntity(final boolean durable) {
+
+                return json(format("{\"type\":\"topic\",\"durable\":%s}", durable));
             }
         };
 
@@ -122,9 +137,11 @@ class RabbitMQStrategy {
         /**
          * Gets the request entity.
          *
+         * @param durable
+         *            indicates whether the resource should handle the data as durable or transient
          * @return request entity
          */
-        abstract Entity<String> getEntity();
+        abstract Entity<String> getEntity(boolean durable);
 
         private static Optional<RabbitMQResource> fromString(final String resource) {
 

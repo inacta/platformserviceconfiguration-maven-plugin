@@ -6,7 +6,7 @@ RabbitMQ, Postgres or MinIO via Maven. The supported features by now are:
 | Application  | Features |
 | ------------ |----------|
 | Keycloak   | Creating (or deleting)<br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> from JSON files|
-| RabbitMQ   | <ul><li>Creating (or deleting) queues</li></ul> |
+| RabbitMQ   | Creating (or deleting)<br> <ul><li>*QUEUES*</li><li>*TOPICS*</li></ul> |
 | MinIO      | <ul><li>Create a new bucket</li><li>Upload files to bucket root</li><li>Upload files to a target path in the bucket</li><li>Upload files from a folder with their relative folder structure</li></ul>|
 | Postgres   | <ul><li>Creating (or deleting) databases</li><li>Creating (or deleting) users (with password)</li><li>Apply SQL scripts</li></ul> |
 | I18N       | Creating (or deleting) i18n entries for<br> <ul><li>*SELECTION_LIST*</li><li>*TEMPLATE*</li><li>*LABEL*</li></ul> |
@@ -59,7 +59,7 @@ To use this plugin and start working with it, declare the
           <plugin>
             <groupId>ch.inacta.maven</groupId>
             <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>2.4.0-SNAPSHOT</version>
           </plugin>
         </plugins>
       </pluginManagement>
@@ -163,7 +163,7 @@ The *resource* tag has different meanings, depending on the application strategy
 | Application  | Meaning | Example |
 | ------------ |---------|---------|
 | *KEYCLOAK*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*REALMS*</li><li>*CLIENTS*</li><li>*USERS*</li><li>*ROLES*</li></ul> | `<resource>REALMS</resource>` |
-| *RABBITMQ*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*QUEUE*</li></ul> | `<resource>QUEUE</resource>` |
+| *RABBITMQ*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*QUEUE*</li><li>*TOPIC*</li></ul> | `<resource>QUEUE</resource>` |
 | *MINIO*      | Specifies the target path in the MinIO where the files are uploaded.<br>If not set, the files are uploaded to the bucket root. | `<resource>images/png</resource>` |
 | *POSTGRES*   | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*DATABASE*</li><li>*USER*</li><li>*SCRIPTS*</li></ul> | `<resource>DATABASE</resource>` |
 | *I18N*       | Specifies which resource shall be created. <br> Possible values: <br> <ul><li>*SELECTION_LIST*</li><li>*TEMPLATE*</li><li>*LABEL*</li></ul> | `<resource>TEMPLATE</resource>` |
@@ -174,7 +174,7 @@ The *resourceName* tag specifies the name of the *resource* which shall be creat
 
 | Application  | Meaning | Example |
 | ------------ |---------|---------|
-| *RABBITMQ*   | Specifies the queue name which shall be created. | `<resourceName>${virtual.host}/${queue}</resourceName>` |
+| *RABBITMQ*   | Specifies the queue name or topic name which shall be created. | `<resourceName>${virtual.host}/${name}</resourceName>` |
 | *POSTGRES*   | Specifies the database name or user name which shall be created. | `<resourceName>${databaseName}</resourceName>` |
 
 ### Specify resource password
@@ -202,6 +202,7 @@ The default value of the *mode* tag is *CREATE*.
 | *realms*   | *KEYCLOAK*  | Comma separated list of realms for which the *resource* shall be created.<br> Only mandatory for creating *clients* and *users*. | `<realms>realm1, realm2</realms>` |
 | *bucket*   | *MINIO*     | Specifies the bucket in the MinIO. | `<bucket>${bucket.name}</bucket>` |
 | *relative* | *MINIO*     | Uploads files with their relative folder structure to MinIO. <br> If not set to *true*, the files will be uploaded "flatten" to bucket root or *resource* path. | `<relative>true</relative>` |
+| *durable*  | *RABBITMQ*  | Specifies whether the data should be durable or transient | `<durable>true</durable>` |
 
 ## Example configurations
 
@@ -274,7 +275,7 @@ Create realms and clients:
 
 ### RabbitMQ
 
-Create a queue:
+Create a queue and topic:
 
     <profile>
       <id>configureRabbitmq</id>
@@ -294,7 +295,26 @@ Create a queue:
                   <application>RABBITMQ</application>
                   <endpoint>${rabbitmq.host}:${rabbitmq.port}/</endpoint>
                   <resource>queue</resource>
+                  <durable>true</durable>
                   <resourceName>${rabbitmq.virtual.host.name}/${rabbitmq.queue.name}</resourceName>
+                  <authorization>
+                    <username>${rabbitmq.user.name}</username>
+                    <password>${rabbitmq.user.password}</password>
+                  </authorization>
+                </configuration>
+              </execution>
+              <execution>
+                <id>create-topic</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+                <configuration>
+                  <application>RABBITMQ</application>
+                  <endpoint>${rabbitmq.host}:${rabbitmq.port}/</endpoint>
+                  <resource>topic</resource>
+                  <durable>false</durable>
+                  <resourceName>${rabbitmq.virtual.host.name}/${rabbitmq.topic.name}</resourceName>
                   <authorization>
                     <username>${rabbitmq.user.name}</username>
                     <password>${rabbitmq.user.password}</password>
