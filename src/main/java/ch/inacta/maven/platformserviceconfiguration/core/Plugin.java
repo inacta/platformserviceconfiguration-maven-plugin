@@ -170,7 +170,7 @@ public class Plugin extends AbstractMojo {
      */
     public boolean isRelative() {
 
-        return requireNonNullElse(this.relative, false);
+        return this.relative;
     }
 
     /**
