@@ -2,6 +2,7 @@ package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.join;
@@ -135,7 +136,10 @@ class KeycloakStrategy {
             @Override
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
-                final ClientRepresentation representation = loadJSON(inputStream, ClientRepresentation.class);
+                String fileContent = loadJSON(inputStream);
+                fileContent = fileContent.replace("${tenant}", realm);
+
+                final ClientRepresentation representation = loadJSON(fileContent, ClientRepresentation.class);
 
                 final boolean isNotPresent = keycloak.realm(realm).clients().findByClientId(representation.getClientId()).isEmpty();
                 if (isNotPresent) {
@@ -257,7 +261,25 @@ class KeycloakStrategy {
             return stream(KeycloakResource.values()).filter(keycloakResource -> keycloakResource.toString().equalsIgnoreCase(resource)).findAny();
         }
 
+        private static String loadJSON(final InputStream is) throws MojoExecutionException {
+
+            try {
+                return new String(is.readAllBytes(), UTF_8);
+            } catch (final IOException e) {
+                throw new MojoExecutionException("Failed to parse JSON file!");
+            }
+        }
+
         private static <T> T loadJSON(final InputStream is, final Class<T> type) throws MojoExecutionException {
+
+            try {
+                return readValue(is, type);
+            } catch (final IOException e) {
+                throw new MojoExecutionException("Failed to parse JSON file!");
+            }
+        }
+
+        private static <T> T loadJSON(final String is, final Class<T> type) throws MojoExecutionException {
 
             try {
                 return readValue(is, type);
