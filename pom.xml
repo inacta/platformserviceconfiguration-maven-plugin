@@ -32,7 +32,7 @@
   </developers>
 
   <properties>
-    <fasterxml.jackson.version>2.4.0</fasterxml.jackson.version>
+    <fasterxml.jackson.version>2.13.0</fasterxml.jackson.version>
 
     <glassfish.jersey.version>2.22.1</glassfish.jersey.version>
 
@@ -40,7 +40,7 @@
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
     <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
 
-    <keycloak.admin.client.version>12.0.4</keycloak.admin.client.version>
+    <keycloak.admin.client.version>15.0.2</keycloak.admin.client.version>
 
     <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
     <maven.compiler.release>11</maven.compiler.release>
