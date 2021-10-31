@@ -28,8 +28,6 @@ import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
-import com.google.common.collect.ImmutableList;
-
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
 
 /**
@@ -41,6 +39,9 @@ import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
 class KeycloakStrategy {
 
     private static final String ADMIN_CLI = "admin-cli";
+
+    private static final String JSON_PARSE_ERROR_MESSAGE = "Failed to parse JSON file!";
+
     private final Plugin plugin;
     private final Log logger;
     private final Keycloak keycloak;
@@ -116,7 +117,7 @@ class KeycloakStrategy {
             List<String> getRealms(final String realms) {
 
                 // we just need one element, the realm name is irrelevant
-                return ImmutableList.of("");
+                return List.of("");
             }
 
             @Override
@@ -222,7 +223,7 @@ class KeycloakStrategy {
 
         /**
          * Creates the Keycloak resource with the Keycloak client.
-         * 
+         *
          * @param keycloak
          *            the Keycloak client
          * @param realm
@@ -266,7 +267,7 @@ class KeycloakStrategy {
             try {
                 return new String(is.readAllBytes(), UTF_8);
             } catch (final IOException e) {
-                throw new MojoExecutionException("Failed to parse JSON file!");
+                throw new MojoExecutionException(JSON_PARSE_ERROR_MESSAGE);
             }
         }
 
@@ -275,7 +276,7 @@ class KeycloakStrategy {
             try {
                 return readValue(is, type);
             } catch (final IOException e) {
-                throw new MojoExecutionException("Failed to parse JSON file!");
+                throw new MojoExecutionException(JSON_PARSE_ERROR_MESSAGE);
             }
         }
 
@@ -284,7 +285,7 @@ class KeycloakStrategy {
             try {
                 return readValue(is, type);
             } catch (final IOException e) {
-                throw new MojoExecutionException("Failed to parse JSON file!");
+                throw new MojoExecutionException(JSON_PARSE_ERROR_MESSAGE);
             }
         }
     }
