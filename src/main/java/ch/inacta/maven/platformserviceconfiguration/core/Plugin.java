@@ -75,6 +75,9 @@ public class Plugin extends AbstractMojo {
     @Parameter(property = "resourcePassword")
     private String resourcePassword;
 
+    @Parameter(property = "resourceOwner")
+    private String resourceOwner;
+
     @Parameter(property = "durable")
     private boolean durable;
     
@@ -206,6 +209,16 @@ public class Plugin extends AbstractMojo {
     public String getResourcePassword() {
 
         return requireNonNullElseGet(this.resourcePassword, String::new);
+    }
+
+    /**
+     * Gets the value of the resource owner property.
+     *
+     * @return possible object is {@link String}
+     */
+    public String getResourceOwner() {
+
+        return requireNonNullElseGet(this.resourceOwner, String::new);
     }
 
     /**
