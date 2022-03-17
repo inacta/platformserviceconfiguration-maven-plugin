@@ -79,6 +79,8 @@ class KeycloakStrategy {
                 this.logger.info(format("- %s [%s] %s with JSON: [%s]", this.plugin.getMode(), this.keycloakResource.toString(),
                         realm.isBlank() ? "\b" : "for realm [" + realm + "]", jsonFile.getName()));
 
+                this.plugin.getProperties().setProperty("tenant", realm);
+                
                 try (final InputStream inputStream = new FileInputStream(jsonFile)) {
 
                     if (this.plugin.getMode() == CREATE) {
