@@ -48,7 +48,8 @@ class KeycloakStrategy {
     private final Log logger;
     private final Keycloak keycloak;
     private final KeycloakResource keycloakResource;
-    private final MavenPropertiesSubstitutor envSubstitutor;
+    
+    private MavenPropertiesSubstitutor envSubstitutor;
 
     
     /**
@@ -61,7 +62,6 @@ class KeycloakStrategy {
 
         this.plugin = plugin;
         this.logger = plugin.getLog();
-        this.envSubstitutor = new MavenPropertiesSubstitutor(plugin.getProperties());
         this.keycloakResource = KeycloakResource.fromString(this.plugin.getResource()).orElseThrow(
                 () -> new MojoExecutionException(format("Tag 'resource' must be one of the values: [%s]", join(KeycloakResource.values(), ", "))));
         this.keycloak = initializeKeycloakClient();
@@ -80,7 +80,9 @@ class KeycloakStrategy {
                         realm.isBlank() ? "\b" : "for realm [" + realm + "]", jsonFile.getName()));
 
                 this.plugin.getProperties().setProperty("tenant", realm);
-                
+
+                this.envSubstitutor = new MavenPropertiesSubstitutor(this.plugin.getProperties());
+
                 try (final InputStream inputStream = new FileInputStream(jsonFile)) {
 
                     if (this.plugin.getMode() == CREATE) {

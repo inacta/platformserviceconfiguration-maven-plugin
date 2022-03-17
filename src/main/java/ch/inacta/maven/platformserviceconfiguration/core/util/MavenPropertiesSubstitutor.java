@@ -12,7 +12,7 @@ import org.apache.commons.text.StringSubstitutor;
  */
 public class MavenPropertiesSubstitutor extends StringSubstitutor {
 
-    public MavenPropertiesSubstitutor(Properties properties) {
+    public MavenPropertiesSubstitutor(final Properties properties) {
 
         super(properties::getProperty);
         
