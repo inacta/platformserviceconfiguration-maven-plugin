@@ -18,8 +18,11 @@ public class MavenPropertiesSubstitutor extends StringSubstitutor {
             
             System.out.println(key);
             System.out.println(realm);
+            System.out.println(properties.getProperty(key));
+            System.out.println("tenant".equalsIgnoreCase(key.trim()));
+            System.out.println("VALUE-EVALUATED: " + ("tenant".equalsIgnoreCase(key.trim()) ? realm : properties.getProperty(key)));
 
-            return "tenant".equals(key) ? realm : properties.getProperty(key);
+            return "tenant".equalsIgnoreCase(key.trim()) ? realm : properties.getProperty(key);
         });
         
         this.setEnableUndefinedVariableException(false);
