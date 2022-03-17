@@ -10,6 +10,7 @@ import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.USERNAME;
 import static org.keycloak.util.JsonSerialization.readValue;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
+import ch.inacta.maven.platformserviceconfiguration.core.util.EnvironmentVariableSubstitutor;
 
 /**
  * Strategy to handle Keycloak specific configuration tasks.
@@ -46,7 +48,7 @@ class KeycloakStrategy {
     private final Log logger;
     private final Keycloak keycloak;
     private final KeycloakResource keycloakResource;
-
+    
     /**
      * Default constructor.
      *
@@ -104,7 +106,10 @@ class KeycloakStrategy {
             @Override
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
-                final RealmRepresentation representation = loadJSON(inputStream, RealmRepresentation.class);
+                String fileContent = loadJSON(inputStream);
+                this.envSubstitutor.replace(fileContent);
+                
+                final RealmRepresentation representation = loadJSON(new ByteArrayInputStream(fileContent.getBytes()), RealmRepresentation.class);
 
                 final boolean isPresent = keycloak.realms().findAll().stream()
                         .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(representation.getId()));
@@ -138,6 +143,8 @@ class KeycloakStrategy {
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
+                this.envSubstitutor.replace(fileContent);
+                
                 fileContent = fileContent.replace("${tenant}", realm);
 
                 final ClientRepresentation representation = loadJSON(fileContent, ClientRepresentation.class);
@@ -167,7 +174,10 @@ class KeycloakStrategy {
             @Override
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
-                final UserRepresentation representation = loadJSON(inputStream, UserRepresentation.class);
+                String fileContent = loadJSON(inputStream);
+                this.envSubstitutor.replace(fileContent);
+
+                final UserRepresentation representation = loadJSON(new ByteArrayInputStream(fileContent.getBytes()), UserRepresentation.class);
                 keycloak.realm(realm).users().create(representation);
 
                 final List<RoleRepresentation> rolesToAdd = new ArrayList<>();
@@ -197,7 +207,10 @@ class KeycloakStrategy {
             @Override
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
 
-                final RoleRepresentation representation = loadJSON(inputStream, RoleRepresentation.class);
+                String fileContent = loadJSON(inputStream);
+                this.envSubstitutor.replace(fileContent);
+
+                final RoleRepresentation representation = loadJSON(new ByteArrayInputStream(fileContent.getBytes()), RoleRepresentation.class);
 
                 final boolean isPresent = keycloak.realm(realm).roles().list().stream()
                         .anyMatch(role -> role.getName().equals(representation.getName()));
@@ -220,6 +233,8 @@ class KeycloakStrategy {
                 }
             }
         };
+
+        EnvironmentVariableSubstitutor envSubstitutor = new EnvironmentVariableSubstitutor();
 
         /**
          * Creates the Keycloak resource with the Keycloak client.

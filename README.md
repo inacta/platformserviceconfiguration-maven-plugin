@@ -59,7 +59,7 @@ To use this plugin and start working with it, declare the
           <plugin>
             <groupId>ch.inacta.maven</groupId>
             <artifactId>platformserviceconfiguration-maven-plugin</artifactId>
-            <version>2.4.0-SNAPSHOT</version>
+            <version>2.5.0-SNAPSHOT</version>
           </plugin>
         </plugins>
       </pluginManagement>
