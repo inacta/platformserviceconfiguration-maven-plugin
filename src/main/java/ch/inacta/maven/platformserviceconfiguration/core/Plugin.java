@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
@@ -215,6 +216,16 @@ public class Plugin extends AbstractMojo {
     public boolean getDurable() {
 
         return this.durable;
+    }
+    
+    /**
+     * Gets the properties set in the maven project context
+     * 
+     * @return properties in maven context
+     */
+    public Properties getProperties() {
+        
+        return this.project.getProperties();
     }
 
     private void validateAuthorization() throws MojoExecutionException {

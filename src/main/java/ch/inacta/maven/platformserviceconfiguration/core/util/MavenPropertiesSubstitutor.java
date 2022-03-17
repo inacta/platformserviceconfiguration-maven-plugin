@@ -1,5 +1,7 @@
 package ch.inacta.maven.platformserviceconfiguration.core.util;
 
+import java.util.Properties;
+
 import org.apache.commons.text.StringSubstitutor;
 
 /**
@@ -10,9 +12,9 @@ import org.apache.commons.text.StringSubstitutor;
  */
 public class MavenPropertiesSubstitutor extends StringSubstitutor {
 
-    public MavenPropertiesSubstitutor() {
+    public MavenPropertiesSubstitutor(Properties properties) {
 
-        super(System::getenv);
+        super(properties::getProperty);
         
         this.setEnableUndefinedVariableException(false);
         this.setEnableSubstitutionInVariables(false);

@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -48,6 +49,8 @@ class KeycloakStrategy {
     private final Log logger;
     private final Keycloak keycloak;
     private final KeycloakResource keycloakResource;
+    private final MavenPropertiesSubstitutor envSubstitutor;
+
     
     /**
      * Default constructor.
@@ -59,6 +62,7 @@ class KeycloakStrategy {
 
         this.plugin = plugin;
         this.logger = plugin.getLog();
+        this.envSubstitutor = new MavenPropertiesSubstitutor(plugin.getProperties());
         this.keycloakResource = KeycloakResource.fromString(this.plugin.getResource()).orElseThrow(
                 () -> new MojoExecutionException(format("Tag 'resource' must be one of the values: [%s]", join(KeycloakResource.values(), ", "))));
         this.keycloak = initializeKeycloakClient();
@@ -79,7 +83,7 @@ class KeycloakStrategy {
                 try (final InputStream inputStream = new FileInputStream(jsonFile)) {
 
                     if (this.plugin.getMode() == CREATE) {
-                        this.keycloakResource.create(this.keycloak, realm, inputStream);
+                        this.keycloakResource.create(this.keycloak, realm, inputStream, this.envSubstitutor);
                     } else {
                         this.keycloakResource.delete(this.keycloak, realm, inputStream);
                     }
@@ -104,13 +108,13 @@ class KeycloakStrategy {
         REALMS {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
                 
                 String fileContent = loadJSON(inputStream);
                 
-                System.out.print(this.envSubstitutor.replace(fileContent));
+                System.out.print(envSubstitutor.replace(fileContent));
                 
-                final RealmRepresentation representation = loadJSON(new ByteArrayInputStream(this.envSubstitutor.replace(fileContent).getBytes()), RealmRepresentation.class);
+                final RealmRepresentation representation = loadJSON(new ByteArrayInputStream(envSubstitutor.replace(fileContent).getBytes()), RealmRepresentation.class);
 
                 final boolean isPresent = keycloak.realms().findAll().stream()
                         .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(representation.getId()));
@@ -141,14 +145,11 @@ class KeycloakStrategy {
         CLIENTS {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
-                this.envSubstitutor.replace(fileContent);
                 
-                fileContent = fileContent.replace("${tenant}", realm);
-
-                final ClientRepresentation representation = loadJSON(fileContent, ClientRepresentation.class);
+                final ClientRepresentation representation = loadJSON(envSubstitutor.replace(fileContent), ClientRepresentation.class);
 
                 final boolean isNotPresent = keycloak.realm(realm).clients().findByClientId(representation.getClientId()).isEmpty();
                 if (isNotPresent) {
@@ -173,12 +174,11 @@ class KeycloakStrategy {
         USERS {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
-                this.envSubstitutor.replace(fileContent);
 
-                final UserRepresentation representation = loadJSON(new ByteArrayInputStream(fileContent.getBytes()), UserRepresentation.class);
+                final UserRepresentation representation = loadJSON(envSubstitutor.replace(fileContent), UserRepresentation.class);
                 keycloak.realm(realm).users().create(representation);
 
                 final List<RoleRepresentation> rolesToAdd = new ArrayList<>();
@@ -206,12 +206,11 @@ class KeycloakStrategy {
         ROLES {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
-                this.envSubstitutor.replace(fileContent);
 
-                final RoleRepresentation representation = loadJSON(new ByteArrayInputStream(fileContent.getBytes()), RoleRepresentation.class);
+                final RoleRepresentation representation = loadJSON(envSubstitutor.replace(fileContent), RoleRepresentation.class);
 
                 final boolean isPresent = keycloak.realm(realm).roles().list().stream()
                         .anyMatch(role -> role.getName().equals(representation.getName()));
@@ -235,8 +234,6 @@ class KeycloakStrategy {
             }
         };
 
-        MavenPropertiesSubstitutor envSubstitutor = new MavenPropertiesSubstitutor();
-
         /**
          * Creates the Keycloak resource with the Keycloak client.
          *
@@ -246,8 +243,10 @@ class KeycloakStrategy {
          *            the name of the realm for which the Keycloak resource has to be created
          * @param inputStream
          *            the JSON definition file of the Keycloak resource
+         * @param envSubstitutor
+         *            the MavenPropertiesSubstitutor to substitute values in files
          */
-        abstract void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException;
+        abstract void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException;
 
         /**
          * Deletes the Keycloak resource with the Keycloak client.
