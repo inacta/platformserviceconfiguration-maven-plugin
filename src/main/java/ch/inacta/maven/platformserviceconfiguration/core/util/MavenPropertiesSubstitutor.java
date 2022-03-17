@@ -12,9 +12,9 @@ import org.apache.commons.text.StringSubstitutor;
  */
 public class MavenPropertiesSubstitutor extends StringSubstitutor {
 
-    public MavenPropertiesSubstitutor(final Properties properties) {
+    public MavenPropertiesSubstitutor(final Properties properties, String realm) {
 
-        super(properties::getProperty);
+        super(key -> "tenant".equals(key) ? realm : properties.getProperty(key));
         
         this.setEnableUndefinedVariableException(false);
         this.setEnableSubstitutionInVariables(false);
