@@ -111,9 +111,7 @@ class KeycloakStrategy {
                 
                 String fileContent = loadJSON(inputStream);
                 
-                System.out.print(envSubstitutor.replace(fileContent));
-                
-                final RealmRepresentation representation = loadJSON(new ByteArrayInputStream(envSubstitutor.replace(fileContent).getBytes()), RealmRepresentation.class);
+                final RealmRepresentation representation = loadJSON(envSubstitutor.replace(fileContent), RealmRepresentation.class);
 
                 final boolean isPresent = keycloak.realms().findAll().stream()
                         .anyMatch(realmRepresentation -> realmRepresentation.getId().equals(representation.getId()));
