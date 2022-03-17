@@ -3,14 +3,14 @@ package ch.inacta.maven.platformserviceconfiguration.core.util;
 import org.apache.commons.text.StringSubstitutor;
 
 /**
- * Substitutes text placeholder with correpsonding env variables.
+ * Substitutes text placeholder with correpsonding maven build properties.
  *
  * @author Inacta AG
  * @since 1.0.0
  */
-public class EnvironmentVariableSubstitutor extends StringSubstitutor {
+public class MavenPropertiesSubstitutor extends StringSubstitutor {
 
-    public EnvironmentVariableSubstitutor() {
+    public MavenPropertiesSubstitutor() {
 
         super(System::getenv);
         

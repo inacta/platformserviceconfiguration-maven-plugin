@@ -75,6 +75,9 @@ public class Plugin extends AbstractMojo {
 
     @Parameter(property = "durable")
     private boolean durable;
+    
+    @Parameter(defaultValue = "${project}", readonly = true)
+    protected MavenProject project;
 
     @Override
     public void execute() throws MojoExecutionException {

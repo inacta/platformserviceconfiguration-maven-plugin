@@ -30,7 +30,7 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
-import ch.inacta.maven.platformserviceconfiguration.core.util.EnvironmentVariableSubstitutor;
+import ch.inacta.maven.platformserviceconfiguration.core.util.MavenPropertiesSubstitutor;
 
 /**
  * Strategy to handle Keycloak specific configuration tasks.
@@ -105,7 +105,7 @@ class KeycloakStrategy {
 
             @Override
             void create(final Keycloak keycloak, final String realm, final InputStream inputStream) throws MojoExecutionException {
-
+                
                 String fileContent = loadJSON(inputStream);
                 
                 System.out.print(this.envSubstitutor.replace(fileContent));
@@ -235,7 +235,7 @@ class KeycloakStrategy {
             }
         };
 
-        EnvironmentVariableSubstitutor envSubstitutor = new EnvironmentVariableSubstitutor();
+        MavenPropertiesSubstitutor envSubstitutor = new MavenPropertiesSubstitutor();
 
         /**
          * Creates the Keycloak resource with the Keycloak client.
