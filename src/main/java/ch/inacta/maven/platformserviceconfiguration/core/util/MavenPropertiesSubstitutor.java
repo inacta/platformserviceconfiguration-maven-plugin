@@ -17,6 +17,6 @@ public class MavenPropertiesSubstitutor extends StringSubstitutor {
         super(key -> "tenant".equals(key) ? realm : properties.getProperty(key));
         
         this.setEnableUndefinedVariableException(false);
-        this.setEnableSubstitutionInVariables(false);
+        this.setEnableSubstitutionInVariables(true);
     }
 }
