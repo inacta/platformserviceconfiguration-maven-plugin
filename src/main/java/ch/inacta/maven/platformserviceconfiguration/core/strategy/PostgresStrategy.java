@@ -71,12 +71,14 @@ public class PostgresStrategy {
 
     private void createOrDeleteDatabaseResource(final Statement statement) throws MojoExecutionException {
 
-        this.plugin.getLog().info(format("- %s [%s] with name: [%s]", this.plugin.getMode(), this.databaseResource.toString(), this.plugin.getResourceName()));
+        this.plugin.getLog()
+                .info(format("- %s [%s] with name: [%s]", this.plugin.getMode(), this.databaseResource.toString(), this.plugin.getResourceName()));
 
         try {
 
             if (this.plugin.getMode() == CREATE && !statement.executeQuery(this.databaseResource.exists(this.plugin.getResourceName())).next()) {
-                statement.execute(this.databaseResource.create(this.plugin.getResourceName(), this.plugin.getResourcePassword()));
+                statement.execute(this.databaseResource.create(this.plugin.getResourceName(), this.plugin.getResourcePassword(),
+                        this.plugin.getResourceOwner()));
             } else if (this.plugin.getMode() == DELETE) {
                 statement.execute(this.databaseResource.delete(this.plugin.getResourceName()));
             }
@@ -109,13 +111,13 @@ public class PostgresStrategy {
             @Override
             String exists(final String name) {
 
-                return format("SELECT datname FROM pg_database WHERE datname = '%s'", name);
+                return format("SELECT datname FROM pg_database WHERE datname = \"%s\"", name);
             }
 
             @Override
-            String create(final String name, final String password) {
+            String create(final String name, final String password, final String owner) {
 
-                return format("CREATE DATABASE \"%s\"", name); // double quotes are necessary to handle names with hyphen '-'
+                return format("CREATE DATABASE \"%s\" OWNER \"%s\"", name, owner); // double quotes are necessary to handle names with hyphen '-'
             }
 
             @Override
@@ -129,13 +131,13 @@ public class PostgresStrategy {
             @Override
             String exists(final String name) {
 
-                return format("SELECT rolname FROM pg_roles WHERE rolname = '%s'", name);
+                return format("SELECT rolname FROM pg_roles WHERE rolname = \"%s\"", name);
             }
 
             @Override
-            String create(final String name, final String password) {
+            String create(final String name, final String password, final String owner) {
 
-                return format("CREATE USER \"%s\" WITH PASSWORD '%s'", name, password); // double quotes are necessary to handle names with hyphen '-'
+                return format("CREATE USER \"%s\" WITH PASSWORD \"%s\"", name, password); // double quotes are necessary to handle names with hyphen '-'
             }
 
             @Override
@@ -153,7 +155,7 @@ public class PostgresStrategy {
             }
 
             @Override
-            String create(final String name, final String password) {
+            String create(final String name, final String password, final String owner) {
 
                 return "NULL";
             }
@@ -183,7 +185,7 @@ public class PostgresStrategy {
          *            the password for the created database resource
          * @return create statement
          */
-        abstract String create(final String name, final String password);
+        abstract String create(final String name, final String password, final String owner);
 
         /**
          * Deletes the specified database resource.
