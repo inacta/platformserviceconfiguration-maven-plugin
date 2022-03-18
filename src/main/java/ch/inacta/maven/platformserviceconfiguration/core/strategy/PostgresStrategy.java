@@ -111,13 +111,13 @@ public class PostgresStrategy {
             @Override
             String exists(final String name) {
 
-                return format("SELECT datname FROM pg_database WHERE datname = \"%s\"", name);
+                return format("SELECT datname FROM pg_database WHERE datname = '%s'", name);
             }
 
             @Override
             String create(final String name, final String password, final String owner) {
 
-                return format("CREATE DATABASE \"%s\" OWNER \"%s\"", name, owner); // double quotes are necessary to handle names with hyphen '-'
+                return format("CREATE DATABASE \"%s\" OWNER '%s'", name, owner); // double quotes are necessary to handle names with hyphen '-'
             }
 
             @Override
@@ -131,13 +131,13 @@ public class PostgresStrategy {
             @Override
             String exists(final String name) {
 
-                return format("SELECT rolname FROM pg_roles WHERE rolname = \"%s\"", name);
+                return format("SELECT rolname FROM pg_roles WHERE rolname = '%s'", name);
             }
 
             @Override
             String create(final String name, final String password, final String owner) {
 
-                return format("CREATE USER \"%s\" WITH PASSWORD \"%s\"", name, password); // double quotes are necessary to handle names with hyphen '-'
+                return format("CREATE USER \"%s\" WITH PASSWORD '%s'", name, password); // double quotes are necessary to handle names with hyphen '-'
             }
 
             @Override
