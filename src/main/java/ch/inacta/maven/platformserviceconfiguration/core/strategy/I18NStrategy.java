@@ -90,7 +90,7 @@ class I18NStrategy {
                 
                 final String insertStatement = this.i18NResource.insert(file);
 
-                this.plugin.getLog().info(
+                this.plugin.getLog().debug(
                         format("-- Data record of type [%s] is inserted with the following statment: %s", this.i18NResource.name(), insertStatement));
 
                 statement.execute(insertStatement);
