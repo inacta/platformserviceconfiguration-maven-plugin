@@ -87,7 +87,13 @@ class I18NStrategy {
             }
 
             if (this.plugin.getMode() == CREATE) {
-                statement.execute(this.i18NResource.insert(file));
+                
+                final String insertStatement = this.i18NResource.insert(file);
+
+                this.plugin.getLog().info(
+                        format("-- Data record of type [%s] is inserted with the following statment: %s", this.i18NResource.name(), insertStatement));
+
+                statement.execute(insertStatement);
             }
 
         } catch (final SQLException e) {
