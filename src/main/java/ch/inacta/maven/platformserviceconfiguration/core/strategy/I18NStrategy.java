@@ -110,8 +110,8 @@ class I18NStrategy {
 
     private static String getLanguage(final File file) {
 
-        final int underscoreIndex = file.getName().indexOf("_");
-        if (underscoreIndex == -1) {
+        final int underscoreIndex = file.getName().lastIndexOf("_");
+        if (underscoreIndex == -1 || underscoreIndex < file.getName().substring(0, file.getName().indexOf(".")).length() - 3) {
             return null;
         }
         return file.getName().substring(underscoreIndex + 1, file.getName().indexOf("."));
@@ -119,8 +119,10 @@ class I18NStrategy {
 
     private static String getFileNameWithoutExtension(final File file) {
 
-        final int underscoreIndex = file.getName().indexOf("_");
-        return file.getName().substring(0, underscoreIndex == -1 ? file.getName().indexOf(".") : underscoreIndex);
+        if (getLanguage(file.getName()) == null) {
+            return file.getName().substring(0, file.getName().indexOf("."));
+        }
+        return file.getName().substring(0, file.getName().indexOf(".")).substring(0, file.getName().lastIndexOf("_"));
     }
 
     private enum I18NResource {
