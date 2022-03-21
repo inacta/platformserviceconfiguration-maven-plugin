@@ -119,7 +119,7 @@ class I18NStrategy {
 
     private static String getFileNameWithoutExtension(final File file) {
 
-        if (getLanguage(file.getName()) == null) {
+        if (getLanguage(file) == null) {
             return file.getName().substring(0, file.getName().indexOf("."));
         }
         return file.getName().substring(0, file.getName().indexOf(".")).substring(0, file.getName().lastIndexOf("_"));
