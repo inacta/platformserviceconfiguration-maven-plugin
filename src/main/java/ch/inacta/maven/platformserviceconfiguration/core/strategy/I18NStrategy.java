@@ -3,8 +3,10 @@ package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.sql.DriverManager.getConnection;
 import static java.util.Arrays.stream;
+import static org.apache.commons.codec.binary.Hex.encodeHex;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.keycloak.OAuth2Constants.PASSWORD;
@@ -130,7 +132,7 @@ class I18NStrategy {
         }
         return file.getName().substring(0, file.getName().indexOf(".")).substring(0, file.getName().lastIndexOf("_"));
     }
-
+    
     private enum I18NResource {
 
         SELECTION_LIST {
@@ -218,9 +220,9 @@ class I18NStrategy {
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ","
-                        + "encode(E'"
-                        + readFileToString(file, UTF_8).replace("'", "''")
-                        + "'::bytea, 'escape')"
+                        + "decode('"
+                        + String.valueOf(encodeHex(readFileToByteArray(file)))
+                        + "', 'hex')"
                         + ");";
             }
 
@@ -258,9 +260,9 @@ class I18NStrategy {
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ","
-                        + "encode(E'"
-                        + readFileToString(file, UTF_8).replace("'", "''")
-                        + "'::bytea, 'escape')"
+                        + "decode('"
+                        + String.valueOf(encodeHex(readFileToByteArray(file)))
+                        + "', 'hex')"
                         + ");";
             }
 
