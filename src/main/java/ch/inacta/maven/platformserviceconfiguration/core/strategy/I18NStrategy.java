@@ -218,9 +218,9 @@ class I18NStrategy {
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ","
-                        + "encode('"
+                        + "encode(E'"
                         + readFileToString(file, UTF_8).replace("'", "''")
-                        + "'::bytea, 'hex')"
+                        + "'::bytea, 'escape')"
                         + ");";
             }
 
@@ -258,9 +258,9 @@ class I18NStrategy {
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ","
-                        + "encode('"
+                        + "encode(E'"
                         + readFileToString(file, UTF_8).replace("'", "''")
-                        + "'::bytea, 'hex')"
+                        + "'::bytea, 'escape')"
                         + ");";
             }
 
