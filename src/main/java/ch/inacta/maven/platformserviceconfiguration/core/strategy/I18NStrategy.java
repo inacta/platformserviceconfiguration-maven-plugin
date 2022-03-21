@@ -3,12 +3,10 @@ package ch.inacta.maven.platformserviceconfiguration.core.strategy;
 import static ch.inacta.maven.platformserviceconfiguration.core.strategy.ResourceMode.CREATE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.sql.DriverManager.getConnection;
 import static java.util.Arrays.stream;
 import static org.apache.commons.codec.binary.Hex.encodeHex;
 import static org.apache.commons.io.FileUtils.readFileToByteArray;
-import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.USERNAME;
@@ -157,7 +155,9 @@ class I18NStrategy {
                         + CREATED_AND_MODIFIED_BY
                         + "',"
                         + "'"
-                        + readFileToString(file, UTF_8).replace("'", "''")
+                        + "decode('"
+                        + String.valueOf(encodeHex(readFileToByteArray(file)))
+                        + "', 'hex')"
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ",'"
