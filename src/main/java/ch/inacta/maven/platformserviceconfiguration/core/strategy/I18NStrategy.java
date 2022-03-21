@@ -7,6 +7,7 @@ import static java.sql.DriverManager.getConnection;
 import static java.util.Arrays.stream;
 import static org.apache.commons.codec.binary.Hex.encodeHex;
 import static org.apache.commons.io.FileUtils.readFileToByteArray;
+import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.USERNAME;
@@ -155,9 +156,7 @@ class I18NStrategy {
                         + CREATED_AND_MODIFIED_BY
                         + "',"
                         + "'"
-                        + "decode('"
-                        + String.valueOf(encodeHex(readFileToByteArray(file)))
-                        + "', 'hex')"
+                        + readFileToString(file, UTF_8).replace("'", "''")
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ",'"
