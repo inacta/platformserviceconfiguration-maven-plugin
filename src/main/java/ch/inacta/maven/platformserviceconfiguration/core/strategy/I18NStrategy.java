@@ -7,6 +7,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.sql.DriverManager.getConnection;
 import static java.util.Arrays.stream;
 import static org.apache.commons.codec.binary.Hex.encodeHex;
+import static org.apache.commons.io.FileUtils.readFileToByteArray;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.keycloak.OAuth2Constants.PASSWORD;
