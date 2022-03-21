@@ -218,7 +218,7 @@ class I18NStrategy {
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ","
-                        + "encode('"
+                        + "decode('"
                         + readFileToString(file, UTF_8).replace("'", "''")
                         + "', 'hex')"
                         + ");";
@@ -258,7 +258,7 @@ class I18NStrategy {
                         + "',"
                         + (language == null ? "null" : "'" + language + "'")
                         + ","
-                        + "encode('"
+                        + "decode('"
                         + readFileToString(file, UTF_8).replace("'", "''")
                         + "', 'hex')"
                         + ");";
