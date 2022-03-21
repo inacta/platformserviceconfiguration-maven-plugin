@@ -220,7 +220,7 @@ class I18NStrategy {
                         + ","
                         + "decode('"
                         + readFileToString(file, UTF_8).replace("'", "''")
-                        + "', 'escape')"
+                        + "', 'hex')"
                         + ");";
             }
 
@@ -260,7 +260,7 @@ class I18NStrategy {
                         + ","
                         + "decode('"
                         + readFileToString(file, UTF_8).replace("'", "''")
-                        + "', 'escape')"
+                        + "', 'hex')"
                         + ");";
             }
 
