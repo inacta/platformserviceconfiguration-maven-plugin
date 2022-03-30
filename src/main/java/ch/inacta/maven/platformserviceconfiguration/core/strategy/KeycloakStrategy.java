@@ -16,7 +16,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -184,8 +187,19 @@ class KeycloakStrategy {
                 representation.getRealmRoles().forEach(role -> rolesToAdd.add(keycloak.realm(realm).roles().get(role).toRepresentation()));
 
                 keycloak.realm(realm).users().search(representation.getUsername()).forEach(userRepresentation -> {
+
                     final UserResource userResource = keycloak.realm(realm).users().get(userRepresentation.getId());
                     userResource.roles().realmLevel().add(rolesToAdd);
+                    
+                    representation.getClientRoles().entrySet().forEach(clientRoleEntry -> {
+                        
+                        ClientRepresentation clientRepresentation = keycloak.realm(realm).clients().findByClientId(clientRoleEntry.getKey()).get(0);
+                        
+                        final List<RoleRepresentation> clientRolesToAdd = new ArrayList<>();
+                        clientRoleEntry.getValue().forEach(clientRole -> clientRolesToAdd.add(keycloak.realm(realm).roles().get(clientRole).toRepresentation()));
+
+                        userResource.roles().clientLevel(clientRepresentation.getId()).add(clientRolesToAdd);
+                    });
                 });
             }
 
