@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -240,6 +241,9 @@ class KeycloakStrategy {
                                             plugin.getLog().info(
                                                     "ENHANCE COMPOSITE ROLE WITH: " + String.join(",", representation.getComposites().getRealm()));
 
+                                            if (compositeRole.getComposites() == null) {
+                                                compositeRole.getComposites().setRealm(new HashSet<>());
+                                            }
                                             compositeRole.getComposites().getRealm().addAll(representation.getComposites().getRealm());
                                         });
                             }
