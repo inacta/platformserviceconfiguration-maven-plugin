@@ -233,6 +233,12 @@ class KeycloakStrategy {
                         .anyMatch(role -> role.getName().equals(representation.getName()));
                 if (!isPresent) {
                     keycloak.realm(realm).roles().create(representation);
+                } else {
+                    if (representation.isComposite()) {
+                        keycloak.realm(realm).roles().list().stream().filter(role -> role.getName().equals(representation.getName())).findFirst().ifPresent(compositeRole -> {
+                            compositeRole.getComposites().getRealm().addAll(representation.getComposites().getRealm());
+                        });
+                    }
                 }
             }
 
