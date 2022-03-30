@@ -234,6 +234,8 @@ class KeycloakStrategy {
 
                             if (representation.isComposite()) {
 
+                                keycloak.realm(realm).roles().deleteRole(foundRole.getName());
+
                                 plugin.getLog().info("ENHANCE COMPOSITE ROLE: " + foundRole.getName());
 
                                 plugin.getLog().info("ENHANCE COMPOSITE ROLE WITH: " + String.join(",", representation.getComposites().getRealm()));
@@ -247,7 +249,6 @@ class KeycloakStrategy {
                                 }
                                 foundRole.getComposites().getRealm().addAll(representation.getComposites().getRealm());
                                 
-                                keycloak.realm(realm).roles().deleteRole(foundRole.getName());
                                 keycloak.realm(realm).roles().create(foundRole);
                             }
 
