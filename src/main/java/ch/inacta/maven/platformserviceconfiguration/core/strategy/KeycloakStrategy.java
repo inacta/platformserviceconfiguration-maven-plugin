@@ -27,6 +27,7 @@ import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation.Composites;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import ch.inacta.maven.platformserviceconfiguration.core.Plugin;
@@ -226,8 +227,8 @@ class KeycloakStrategy {
 
                 final RoleRepresentation representation = loadJSON(envSubstitutor.replace(fileContent), RoleRepresentation.class);
 
-                keycloak.realm(realm).roles().list().stream().filter(role -> role.getName().equals(representation.getName())).findAny()
-                        .ifPresentOrElse((foundRole) -> {
+                keycloak.realm(realm).roles().list().stream().filter(role -> role.getName().equals(representation.getName()) && role.isComposite())
+                        .findAny().ifPresentOrElse(foundRole -> {
 
                             plugin.getLog().info("CREATE PRESENT ROLE: " + foundRole.getName());
 
@@ -235,22 +236,16 @@ class KeycloakStrategy {
 
                                 plugin.getLog().info("ENHANCE COMPOSITE ROLE: " + foundRole.getName());
 
-                                keycloak.realm(realm).roles().list().stream()
-                                        .filter(role -> role.getName().equals(representation.getName()) && role.isComposite()).findFirst()
-                                        .ifPresent(compositeRole -> {
+                                plugin.getLog().info("ENHANCE COMPOSITE ROLE WITH: " + String.join(",", representation.getComposites().getRealm()));
 
-                                            plugin.getLog().info(
-                                                    "ENHANCE COMPOSITE ROLE WITH: " + String.join(",", representation.getComposites().getRealm()));
+                                if (foundRole.getComposites() == null) {
+                                    foundRole.setComposites(new Composites());
+                                }
 
-                                            if (compositeRole.getComposites() == null) {
-                                                compositeRole.setComposites(representation.getComposites());
-                                            }
-
-                                            if (compositeRole.getComposites().getRealm() == null) {
-                                                compositeRole.getComposites().setRealm(new HashSet<>());
-                                            }
-                                            compositeRole.getComposites().getRealm().addAll(representation.getComposites().getRealm());
-                                        });
+                                if (foundRole.getComposites().getRealm() == null) {
+                                    foundRole.getComposites().setRealm(new HashSet<>());
+                                }
+                                foundRole.getComposites().getRealm().addAll(representation.getComposites().getRealm());
                             }
 
                         }, () -> keycloak.realm(realm).roles().create(representation));
