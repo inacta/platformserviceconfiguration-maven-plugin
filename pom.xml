@@ -42,7 +42,7 @@
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
     <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
 
-    <keycloak.admin.client.version>15.0.2</keycloak.admin.client.version>
+    <keycloak.admin.client.version>17.0.1-INACTA</keycloak.admin.client.version>
 
     <maven.compiler.release>11</maven.compiler.release>
 

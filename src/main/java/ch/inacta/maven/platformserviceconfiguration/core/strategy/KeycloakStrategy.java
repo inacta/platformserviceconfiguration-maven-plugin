@@ -99,7 +99,7 @@ class KeycloakStrategy {
 
     private Keycloak initializeKeycloakClient() {
 
-        return KeycloakBuilder.builder().serverUrl(this.plugin.getEndpoint() + "/auth").realm("master")
+        return KeycloakBuilder.builder().serverUrl(this.plugin.getEndpoint() + "").realm("master")
                 .username(this.plugin.getAuthorization().get(USERNAME)).password(this.plugin.getAuthorization().get(PASSWORD)).clientId(ADMIN_CLI)
                 .build();
     }
