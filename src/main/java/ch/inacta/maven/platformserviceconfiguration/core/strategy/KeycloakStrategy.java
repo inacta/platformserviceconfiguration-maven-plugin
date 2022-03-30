@@ -246,6 +246,9 @@ class KeycloakStrategy {
                                     foundRole.getComposites().setRealm(new HashSet<>());
                                 }
                                 foundRole.getComposites().getRealm().addAll(representation.getComposites().getRealm());
+                                
+                                keycloak.realm(realm).roles().deleteRole(foundRole.getName());
+                                keycloak.realm(realm).roles().create(foundRole);
                             }
 
                         }, () -> keycloak.realm(realm).roles().create(representation));
