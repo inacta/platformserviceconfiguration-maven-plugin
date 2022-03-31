@@ -257,7 +257,7 @@ class KeycloakStrategy {
 
                                 keycloak.realm(realm).rolesById().addComposites(realmRole.getId(),
                                         representation.getComposites().getRealm().stream()
-                                                .map(roleId -> keycloak.realm(realm).roles().get(representation.getName()).toRepresentation())
+                                                .map(roleName -> keycloak.realm(realm).roles().get(roleName).toRepresentation())
                                                 .collect(Collectors.toList()));
                             }
                         });
