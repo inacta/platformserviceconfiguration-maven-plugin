@@ -252,8 +252,13 @@ class KeycloakStrategy {
                                 LOGGER.info("COMPOSITES REALM-ROLES: "
                                         + (keycloak.realm(realm).rolesById().getRoleComposites(realmRole.getId()) == null
                                                 ? ""
-                                                : String.join(", ", keycloak.realm(realm).rolesById().getRoleComposites(realmRole.getId())
-                                                        .stream().map(RoleRepresentation::getName).collect(Collectors.toList()))));
+                                                : String.join(", ", keycloak.realm(realm).rolesById().getRoleComposites(realmRole.getId()).stream()
+                                                        .map(RoleRepresentation::getName).collect(Collectors.toList()))));
+
+                                keycloak.realm(realm).rolesById().addComposites(realmRole.getId(),
+                                        representation.getComposites().getRealm().stream()
+                                                .map(roleId -> keycloak.realm(realm).roles().get(representation.getName()).toRepresentation())
+                                                .collect(Collectors.toList()));
                             }
                         });
                     }
