@@ -241,7 +241,7 @@ class KeycloakStrategy {
                         LOGGER.info("COMPOSITES REALM-ROLES TO IMPORT: "
                                 + (representation.getComposites() == null ? "" : String.join(", ", representation.getComposites().getRealm())));
                         
-                        keycloak.realm(realm).toRepresentation().getRoles().getRealm().forEach(realmRole -> {
+                        keycloak.realm(realm).roles().list().forEach(realmRole -> {
 
                             if (realmRole.isComposite() && realmRole.getName().equals(representation.getName())) {
                                 LOGGER.info("FOUND COMPOSITE ROLE: " + realmRole.getName());
