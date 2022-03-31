@@ -43,8 +43,9 @@ class KeycloakStrategy {
 
     private static final String JSON_PARSE_ERROR_MESSAGE = "Failed to parse JSON file!";
 
+    private static Log LOGGER;
+
     private final Plugin plugin;
-    private final Log logger;
     private final Keycloak keycloak;
     private final KeycloakResource keycloakResource;
 
@@ -59,7 +60,9 @@ class KeycloakStrategy {
     KeycloakStrategy(final Plugin plugin) throws MojoExecutionException {
 
         this.plugin = plugin;
-        this.logger = plugin.getLog();
+
+        LOGGER = plugin.getLog();
+
         this.keycloakResource = KeycloakResource.fromString(this.plugin.getResource()).orElseThrow(
                 () -> new MojoExecutionException(format("Tag 'resource' must be one of the values: [%s]", join(KeycloakResource.values(), ", "))));
         this.keycloak = initializeKeycloakClient();
@@ -74,7 +77,7 @@ class KeycloakStrategy {
 
             for (final String realm : this.keycloakResource.getRealms(this.plugin.getRealms())) {
 
-                this.logger.info(format("- %s [%s] %s with JSON: [%s]", this.plugin.getMode(), this.keycloakResource.toString(),
+                this.LOGGER.info(format("- %s [%s] %s with JSON: [%s]", this.plugin.getMode(), this.keycloakResource.toString(),
                         realm.isBlank() ? "\b" : "for realm [" + realm + "]", jsonFile.getName()));
 
                 this.envSubstitutor = new MavenPropertiesSubstitutor(this.plugin.getProperties(), realm);
@@ -107,8 +110,8 @@ class KeycloakStrategy {
         REALMS {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream,
-                    final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor)
+                    throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
 
@@ -143,8 +146,8 @@ class KeycloakStrategy {
         CLIENTS {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream,
-                    final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor)
+                    throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
 
@@ -173,8 +176,8 @@ class KeycloakStrategy {
         USERS {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream,
-                    final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor)
+                    throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
 
@@ -218,8 +221,8 @@ class KeycloakStrategy {
         ROLES {
 
             @Override
-            void create(final Keycloak keycloak, final String realm, final InputStream inputStream,
-                    final MavenPropertiesSubstitutor envSubstitutor) throws MojoExecutionException {
+            void create(final Keycloak keycloak, final String realm, final InputStream inputStream, final MavenPropertiesSubstitutor envSubstitutor)
+                    throws MojoExecutionException {
 
                 String fileContent = loadJSON(inputStream);
 
@@ -229,6 +232,25 @@ class KeycloakStrategy {
                         .anyMatch(role -> role.getName().equals(representation.getName()));
                 if (!isPresent) {
                     keycloak.realm(realm).roles().create(representation);
+                } else {
+
+                    if (representation.isComposite()) {
+                        
+                        LOGGER.info("COMPOSITE ROLE TO IMPORT: " + representation.getName());
+                        LOGGER.info("IMPORT HAS COMPOSITES: " + (representation.getComposites() == null ? "no" : "yes"));
+                        LOGGER.info("COMPOSITES REALM-ROLES TO IMPORT: "
+                                + (representation.getComposites() == null ? "" : String.join(", ", representation.getComposites().getRealm())));
+                        
+                        keycloak.realm(realm).toRepresentation().getRoles().getRealm().forEach(realmRole -> {
+
+                            if (realmRole.isComposite() && realmRole.getName().equals(representation.getName())) {
+                                LOGGER.info("FOUND COMPOSITE ROLE: " + realmRole.getName());
+                                LOGGER.info("HAS COMPOSITES: " + (realmRole.getComposites() == null ? "no" : "yes"));
+                                LOGGER.info("COMPOSITES REALM-ROLES: "
+                                        + (realmRole.getComposites() == null ? "" : String.join(", ", realmRole.getComposites().getRealm())));
+                            }
+                        });
+                    }
                 }
             }
 
