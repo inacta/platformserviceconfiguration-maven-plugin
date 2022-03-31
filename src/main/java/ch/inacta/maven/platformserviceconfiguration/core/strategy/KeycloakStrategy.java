@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -235,19 +236,24 @@ class KeycloakStrategy {
                 } else {
 
                     if (representation.isComposite()) {
-                        
+
                         LOGGER.info("COMPOSITE ROLE TO IMPORT: " + representation.getName());
                         LOGGER.info("IMPORT HAS COMPOSITES: " + (representation.getComposites() == null ? "no" : "yes"));
                         LOGGER.info("COMPOSITES REALM-ROLES TO IMPORT: "
                                 + (representation.getComposites() == null ? "" : String.join(", ", representation.getComposites().getRealm())));
-                        
+
                         keycloak.realm(realm).roles().list().forEach(realmRole -> {
 
                             if (realmRole.isComposite() && realmRole.getName().equals(representation.getName())) {
                                 LOGGER.info("FOUND COMPOSITE ROLE: " + realmRole.getName());
-                                LOGGER.info("HAS COMPOSITES: " + (realmRole.getComposites() == null ? "no" : "yes"));
+
+                                LOGGER.info("HAS COMPOSITES: "
+                                        + (keycloak.realm(realm).rolesById().getRealmRoleComposites(realmRole.getId()) == null ? "no" : "yes"));
                                 LOGGER.info("COMPOSITES REALM-ROLES: "
-                                        + (realmRole.getComposites() == null ? "" : String.join(", ", realmRole.getComposites().getRealm())));
+                                        + (realmRole.getComposites() == null
+                                                ? ""
+                                                : String.join(", ", keycloak.realm(realm).rolesById().getRealmRoleComposites(realmRole.getId())
+                                                        .stream().map(RoleRepresentation::getName).collect(Collectors.toList()))));
                             }
                         });
                     }
