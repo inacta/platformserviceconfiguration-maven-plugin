@@ -250,7 +250,7 @@ class KeycloakStrategy {
                                 LOGGER.info("HAS COMPOSITES: "
                                         + (keycloak.realm(realm).rolesById().getRealmRoleComposites(realmRole.getId()) == null ? "no" : "yes"));
                                 LOGGER.info("COMPOSITES REALM-ROLES: "
-                                        + (realmRole.getComposites() == null
+                                        + (keycloak.realm(realm).rolesById().getRoleComposites(realmRole.getId()) == null
                                                 ? ""
                                                 : String.join(", ", keycloak.realm(realm).rolesById().getRoleComposites(realmRole.getId())
                                                         .stream().map(RoleRepresentation::getName).collect(Collectors.toList()))));
