@@ -252,7 +252,7 @@ class KeycloakStrategy {
                                 LOGGER.info("COMPOSITES REALM-ROLES: "
                                         + (realmRole.getComposites() == null
                                                 ? ""
-                                                : String.join(", ", keycloak.realm(realm).rolesById().getRealmRoleComposites(realmRole.getId())
+                                                : String.join(", ", keycloak.realm(realm).rolesById().getRoleComposites(realmRole.getId())
                                                         .stream().map(RoleRepresentation::getName).collect(Collectors.toList()))));
                             }
                         });
