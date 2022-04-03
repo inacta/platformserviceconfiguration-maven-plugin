@@ -101,8 +101,6 @@ class KeycloakStrategy {
 
     private Keycloak initializeKeycloakClient() {
         
-        this.plugin.getLog().info("AUTH LOG ONLY A TEST: " + this.plugin.getAuthorization().get(USERNAME) + " / " + this.plugin.getAuthorization().get(PASSWORD));
-
         return KeycloakBuilder.builder().serverUrl(this.plugin.getEndpoint() + "/auth").realm("master")
                 .username(this.plugin.getAuthorization().get(USERNAME)).password(this.plugin.getAuthorization().get(PASSWORD)).clientId(ADMIN_CLI)
                 .build();
